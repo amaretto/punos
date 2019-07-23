@@ -99,6 +99,7 @@ func (pp *punosPanel) handle(event tcell.Event) (changed, quit bool) {
 			speaker.Unlock()
 			return false, false
 
+		// seek
 		case 'q', 'w':
 			speaker.Lock()
 			newPos := pp.streamer.Position()
@@ -117,6 +118,7 @@ func (pp *punosPanel) handle(event tcell.Event) (changed, quit bool) {
 			speaker.Unlock()
 			return true, false
 
+		// volume
 		case 'a':
 			speaker.Lock()
 			pp.volume.Volume -= 0.1
@@ -129,6 +131,7 @@ func (pp *punosPanel) handle(event tcell.Event) (changed, quit bool) {
 			speaker.Unlock()
 			return true, false
 
+		// change speed
 		case 'z':
 			speaker.Lock()
 			pp.resampler.SetRatio(pp.resampler.Ratio() * 15 / 16)
@@ -152,11 +155,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+	//2nd
+	f2, err := os.Open("mp3/02.mp3")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	streamer, format, err := mp3.Decode(f)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer streamer.Close()
+	//2nd
+	streamer2, format, err := mp3.Decode(f2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer streamer2.Close()
 
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
@@ -171,12 +186,15 @@ func main() {
 	defer screen.Fini()
 
 	pp := newPunosPanel(format.SampleRate, streamer)
+	//2nd
+	pp2 := newPunosPanel(format.SampleRate, streamer2)
 
 	screen.Clear()
 	pp.draw(screen)
 	screen.Show()
 
 	pp.play()
+	pp2.play()
 
 	seconds := time.Tick(time.Second)
 	events := make(chan tcell.Event)
