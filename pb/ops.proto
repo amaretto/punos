@@ -1,0 +1,10 @@
+syntax = "proto3";
+service Punos{
+    rpc Play (PlayMessage) returns (PlayResponse) {}
+    rpc Load (LoadMessage) returns (LoadResponse) {}
+}
+
+message PlayMessage {
+}
+message LoadMessage {
+}
