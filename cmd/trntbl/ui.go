@@ -7,7 +7,8 @@ import (
 )
 
 func doUI(logger *log.Logger) error {
-	app := ui.NewApp(client, url)
+
+	app := ui.NewApp()
 	app.SetLogger(logger)
 
 	app.Run()
