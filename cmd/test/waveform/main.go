@@ -33,6 +33,10 @@ func main() {
 
 	var tmp [2][2]float64
 	var count int
+	var nums []float64
+	nums = make([]float64, 500)
+	ncount := 0
+
 	for {
 		// EOF
 		if sn, sok := streamer.Stream(tmp[:1]); sn == 0 && !sok {
@@ -44,11 +48,15 @@ func main() {
 		sumSquare := math.Pow(samplel, 2)
 		sumSquare += math.Pow(sampler, 2)
 		value := math.Sqrt(sumSquare)
+		//
+		//		posstr := fmt.Sprint(streamer.Position())
+		//		valstr := fmt.Sprint(value)
 
-		posstr := fmt.Sprint(streamer.Position())
-		valstr := fmt.Sprint(value)
-
-		writer.Write([]string{posstr, valstr})
+		if count >= 900000 && count%200 == 0 {
+			nums[ncount] = value
+			ncount++
+			//			writer.Write([]string{posstr, valstr})
+		}
 
 		count++
 		//fmt.Printf("pos:%v,l:%v, r:%v\n", streamer.Position(), samplel, sampler)
@@ -58,8 +66,42 @@ func main() {
 			break
 		}
 	}
+	//	writer.Flush()
+
+	smooth(nums)
+	smooth(nums)
+	smooth(nums)
+	smooth(nums)
+	smooth(nums)
+	smooth(nums)
+	smooth(nums)
+	smooth(nums)
+
+	for i, num := range nums {
+		istr := fmt.Sprint(i)
+		numstr := fmt.Sprint(num)
+		writer.Write([]string{istr, numstr})
+	}
 	writer.Flush()
+
 	//fmt.Println(count)
+}
+
+func smooth(nums []float64) {
+	var sample float64
+	sample = 10
+	var sum float64
+	for i := 0; i < len(nums); i++ {
+		if i < len(nums)-int(sample) {
+			sum = 0
+			for j := 0; j < int(sample); j++ {
+				sum += nums[i+j]
+			}
+			nums[i] = sum / sample
+		} else {
+			nums[i] = nums[i-1]
+		}
+	}
 }
 
 func report(err error) {
