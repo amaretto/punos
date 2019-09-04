@@ -34,7 +34,7 @@ func main() {
 	var tmp [2][2]float64
 	var count int
 	var nums []float64
-	nums = make([]float64, 500)
+	nums = make([]float64, 100000)
 	ncount := 0
 
 	for {
@@ -52,7 +52,8 @@ func main() {
 		//		posstr := fmt.Sprint(streamer.Position())
 		//		valstr := fmt.Sprint(value)
 
-		if count >= 900000 && count%200 == 0 {
+		if count%800 == 0 {
+			//if count >= 900000 && count%200 == 0 {
 			nums[ncount] = value
 			ncount++
 			//			writer.Write([]string{posstr, valstr})
@@ -62,34 +63,36 @@ func main() {
 		//fmt.Printf("pos:%v,l:%v, r:%v\n", streamer.Position(), samplel, sampler)
 
 		//fmt.Printf("pos:%v,value:%v\n", streamer.Position(), value)
-		if count == 1000000 {
-			break
-		}
+		//		if count == 1000000 {
+		//			break
+		//		}
 	}
 	//	writer.Flush()
 
-	smooth(nums)
-	smooth(nums)
-	smooth(nums)
-	smooth(nums)
+	nums = nums[:ncount]
+
 	smooth(nums)
 	smooth(nums)
 	smooth(nums)
 	smooth(nums)
 
-	for i, num := range nums {
+	nnums := normalize(nums)
+	nnums = nnums[3000:5000]
+
+	for i, num := range nnums {
 		istr := fmt.Sprint(i)
 		numstr := fmt.Sprint(num)
 		writer.Write([]string{istr, numstr})
 	}
 	writer.Flush()
 
+	printwave(nnums)
 	//fmt.Println(count)
 }
 
 func smooth(nums []float64) {
 	var sample float64
-	sample = 10
+	sample = 3
 	var sum float64
 	for i := 0; i < len(nums); i++ {
 		if i < len(nums)-int(sample) {
@@ -100,6 +103,48 @@ func smooth(nums []float64) {
 			nums[i] = sum / sample
 		} else {
 			nums[i] = nums[i-1]
+		}
+	}
+}
+
+func normalize(nums []float64) []int {
+	var max float64
+	var limit float64
+	max = 1.0
+	limit = 30.0
+
+	var r []int
+	r = make([]int, len(nums))
+	for i, num := range nums {
+		r[i] = int(math.Ceil(limit * num / max))
+	}
+
+	return r
+}
+
+func printwave(nums []int) {
+	//var limit int
+	//limit = 15
+	//	var out []string
+	//	out = make([]string, limit)
+	file, err := os.Create("fuga.txt")
+	if err != nil {
+		report(err)
+	}
+	defer file.Close()
+
+	//	var gage []byte
+	//	gage = make([]byte, limit)
+	//	for i := 0; i < limit; i++ {
+	//		gage[i] = '#'
+	//	}
+	//
+	gage := "##############################\n"
+
+	for _, num := range nums {
+		if num != 0 {
+			file.WriteString(gage[31-num:])
+			//file.Write("\n")
 		}
 	}
 }
