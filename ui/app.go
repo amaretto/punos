@@ -32,6 +32,9 @@ type App struct {
 	volume     *effects.Volume
 	cuePoint   int
 
+	// Waveform
+	waveform []int
+
 	views.WidgetWatchers
 }
 
@@ -143,9 +146,10 @@ func (a *App) Spddown() {
 }
 
 // Status return music status
-func (a *App) Status() map[string]string {
+func (a *App) Status() (map[string]string, []string) {
 	// gather current information
 	speaker.Lock()
+	pos := a.streamer.Position()
 	position := a.sampleRate.D(a.streamer.Position())
 	length := a.sampleRate.D(a.streamer.Len())
 	volume := a.volume.Volume
@@ -159,7 +163,7 @@ func (a *App) Status() map[string]string {
 	status["cue"] = fmt.Sprintf("Cue\t\t\t\t: %v", cue.Round(time.Second))
 	status["volume"] = fmt.Sprintf("Volume\t: %.1f", volume)
 	status["speed"] = fmt.Sprintf("Speed\t: %.3f", speed)
-	return status
+	return status, Wave2str(GetWave(a.waveform, pos, 800, 100), 30)
 }
 
 // ListMusic confiel list of music
@@ -192,6 +196,18 @@ func (a *App) LoadMusic(path string) {
 		report(err)
 	}
 	// ToDo close streamer when music is switched
+
+	// waveform
+	sampleInterval := 800
+	heightMax := 30
+	valMax := 1.0
+
+	wave := GenWave(streamer, sampleInterval)
+	Smooth(wave)
+	Smooth(wave)
+	Smooth(wave)
+	Smooth(wave)
+	a.waveform = Normalize(wave, float64(heightMax), float64(valMax))
 
 	a.sampleRate = format.SampleRate
 	a.streamer = streamer
@@ -313,6 +329,18 @@ func NewApp() *App {
 	//defer streamer.Close()
 	// ToDo close streamer when music is switched
 
+	// waveform
+	sampleInterval := 800
+	heightMax := 30
+	valMax := 1.0
+
+	wave := GenWave(streamer, sampleInterval)
+	Smooth(wave)
+	Smooth(wave)
+	Smooth(wave)
+	Smooth(wave)
+	app.waveform = Normalize(wave, float64(heightMax), float64(valMax))
+
 	app.sampleRate = format.SampleRate
 	app.streamer = streamer
 	app.ctrl = &beep.Ctrl{Streamer: beep.Loop(-1, app.streamer)}
@@ -343,7 +371,8 @@ func (a *App) Run() {
 	go func() {
 		for {
 			a.app.Update()
-			time.Sleep(time.Second)
+			// if set time.Millisecond, this app freez...
+			time.Sleep(time.Millisecond * 2)
 		}
 	}()
 	a.Logf("Starting app loop")

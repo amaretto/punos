@@ -86,9 +86,8 @@ func (t *TrntblPanel) Draw() {
 
 func (t *TrntblPanel) update() {
 
-	status := t.App().Status()
-
-	t.text.SetLines([]string{
+	status, waveform := t.App().Status()
+	base := []string{
 		" _ __  _   _ _ __   ___  ___",
 		"| '_ \\| | | | '_ \\ / _ \\/ __|",
 		"| |_) | |_| | | | | (_) \\__ \\",
@@ -99,7 +98,10 @@ func (t *TrntblPanel) update() {
 		status["cue"],
 		status["volume"],
 		status["speed"],
-	})
+	}
+	base = append(base, waveform...)
+
+	t.text.SetLines(base)
 }
 
 // Init return just text box
