@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"os"
-	"runtime/trace"
 
 	"github.com/amaretto/punos/ui"
 )
@@ -20,14 +19,6 @@ func main() {
 		}
 	}
 
-	f, err := os.Create("trace.out")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	trace.Start(f)
-	defer trace.Stop()
 	if e := doUI(dlog); e != nil {
 		os.Exit(1)
 	}

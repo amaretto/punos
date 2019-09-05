@@ -337,8 +337,6 @@ func NewApp() *App {
 	wave := GenWave(streamer, sampleInterval)
 	Smooth(wave)
 	Smooth(wave)
-	Smooth(wave)
-	Smooth(wave)
 	app.waveform = Normalize(wave, float64(heightMax), float64(valMax))
 
 	app.sampleRate = format.SampleRate
