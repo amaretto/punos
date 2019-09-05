@@ -1,17 +1,20 @@
 package main
 
 import (
-	"encoding/csv"
 	"fmt"
-	"log"
 	"math"
 	"os"
 
+	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
-	//gomp3 "github.com/hajimehoshi/go-mp3"
 )
 
 func main() {
+
+	sampleInterval := 800
+	windowSize := 100
+	heightMax := 30
+	valMax := 1.0
 
 	f, err := os.Open("mp3/02.mp3")
 	if err != nil {
@@ -19,26 +22,34 @@ func main() {
 	}
 	streamer, _, err := mp3.Decode(f)
 
-	cf, err := os.OpenFile("hoge.csv", os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		log.Fatal("Error:", err)
-	}
-	defer cf.Close()
-	err = cf.Truncate(0)
-	if err != nil {
-		log.Fatal("Error:", err)
-	}
+	wave := genWave(streamer, sampleInterval)
 
-	writer := csv.NewWriter(cf)
+	// smoothing
+	smooth(wave)
+	smooth(wave)
+	smooth(wave)
+	smooth(wave)
 
+	nwave := normalize(wave, float64(heightMax), float64(valMax))
+
+	// wave, position, sampleInterval, windowSize
+	nwave = getWave(nwave, 100000, sampleInterval, windowSize)
+
+	wavestr := wave2str(nwave, heightMax)
+
+	for _, ws := range wavestr {
+		fmt.Println(ws)
+	}
+}
+
+func genWave(streamer beep.StreamSeeker, sampleInterval int) []float64 {
 	var tmp [2][2]float64
-	var count int
-	var nums []float64
-	nums = make([]float64, 100000)
-	ncount := 0
+	var count, ncount int
+	var wave []float64
+	wave = make([]float64, 100000)
 
 	for {
-		// EOF
+		// check EOF
 		if sn, sok := streamer.Stream(tmp[:1]); sn == 0 && !sok {
 			break
 		}
@@ -48,46 +59,17 @@ func main() {
 		sumSquare := math.Pow(samplel, 2)
 		sumSquare += math.Pow(sampler, 2)
 		value := math.Sqrt(sumSquare)
-		//
-		//		posstr := fmt.Sprint(streamer.Position())
-		//		valstr := fmt.Sprint(value)
 
 		if count%800 == 0 {
-			//if count >= 900000 && count%200 == 0 {
-			nums[ncount] = value
+			wave[ncount] = value
 			ncount++
-			//			writer.Write([]string{posstr, valstr})
 		}
 
 		count++
-		//fmt.Printf("pos:%v,l:%v, r:%v\n", streamer.Position(), samplel, sampler)
-
-		//fmt.Printf("pos:%v,value:%v\n", streamer.Position(), value)
-		//		if count == 1000000 {
-		//			break
-		//		}
 	}
-	//	writer.Flush()
 
-	nums = nums[:ncount]
-
-	smooth(nums)
-	smooth(nums)
-	smooth(nums)
-	smooth(nums)
-
-	nnums := normalize(nums)
-	nnums = nnums[3000:5000]
-
-	for i, num := range nnums {
-		istr := fmt.Sprint(i)
-		numstr := fmt.Sprint(num)
-		writer.Write([]string{istr, numstr})
-	}
-	writer.Flush()
-
-	printwave(nnums)
-	//fmt.Println(count)
+	wave = wave[:ncount]
+	return wave
 }
 
 func smooth(nums []float64) {
@@ -107,11 +89,11 @@ func smooth(nums []float64) {
 	}
 }
 
-func normalize(nums []float64) []int {
+func normalize(nums []float64, heightMax, valMax float64) []int {
 	var max float64
 	var limit float64
 	max = 1.0
-	limit = 30.0
+	limit = heightMax
 
 	var r []int
 	r = make([]int, len(nums))
@@ -122,31 +104,48 @@ func normalize(nums []float64) []int {
 	return r
 }
 
-func printwave(nums []int) {
-	//var limit int
-	//limit = 15
-	//	var out []string
-	//	out = make([]string, limit)
-	file, err := os.Create("fuga.txt")
-	if err != nil {
-		report(err)
-	}
-	defer file.Close()
+func getWave(waves []int, pos, sampleRate, windowSize int) []int {
+	var wave []int
+	wave = make([]int, windowSize)
+	center := pos / 800
 
-	//	var gage []byte
-	//	gage = make([]byte, limit)
-	//	for i := 0; i < limit; i++ {
-	//		gage[i] = '#'
-	//	}
-	//
-	gage := "##############################\n"
-
-	for _, num := range nums {
-		if num != 0 {
-			file.WriteString(gage[31-num:])
-			//file.Write("\n")
+	var idx int
+	for i := 0; i < windowSize; i++ {
+		idx = center - (windowSize/2 - 1) + i
+		// front
+		if idx < 0 {
+			continue
 		}
+		// back
+		if idx >= len(waves) {
+			break
+		}
+		wave[i] = waves[idx]
 	}
+	return wave
+}
+
+func wave2str(wave []int, limit int) []string {
+	var waveStr []string
+	var fill []bool
+	waveStr = make([]string, limit)
+	fill = make([]bool, len(wave))
+
+	for i := limit; i > 0; i-- {
+		str := ""
+		for j, num := range wave {
+			if j == len(wave)/2-1 {
+				str = str + "|"
+			} else if num == i || fill[num] {
+				str = str + "#"
+				fill[num] = true
+			} else {
+				str = str + " "
+			}
+		}
+		waveStr[limit-i] = str
+	}
+	return waveStr
 }
 
 func report(err error) {
