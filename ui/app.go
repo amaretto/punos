@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"syscall"
 	"time"
+	"unsafe"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
@@ -31,9 +33,14 @@ type App struct {
 	resampler  *beep.Resampler
 	volume     *effects.Volume
 	cuePoint   int
+	title      string
 
 	// Waveform
-	waveform []int
+	waveform       []int
+	sampleInterval int
+	windowSize     int
+	heightMax      int
+	valMax         float64
 
 	views.WidgetWatchers
 }
@@ -150,20 +157,24 @@ func (a *App) Status() (map[string]string, []string) {
 	// gather current information
 	speaker.Lock()
 	pos := a.streamer.Position()
-	position := a.sampleRate.D(a.streamer.Position())
-	length := a.sampleRate.D(a.streamer.Len())
+	len := a.streamer.Len()
 	volume := a.volume.Volume
 	speed := a.resampler.Ratio()
 	speaker.Unlock()
 
+	position := a.sampleRate.D(pos)
+	length := a.sampleRate.D(len)
+
 	cue := a.sampleRate.D(a.cuePoint)
 
 	status := map[string]string{}
-	status["position"] = fmt.Sprintf("Position\t: %v / %v", position.Round(time.Second), length.Round(time.Second))
-	status["cue"] = fmt.Sprintf("Cue\t\t\t\t: %v", cue.Round(time.Second))
+
+	status["title"] = fmt.Sprintf("[Title : %s]", a.title)
+	status["position"] = fmt.Sprintf("[Position : %s %v / %v]", GetProgressbar(a.windowSize/2, pos, len), position.Round(time.Second), length.Round(time.Second))
+	status["info"] = fmt.Sprintf("[Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", cue.Round(time.Second), volume, speed)
 	status["volume"] = fmt.Sprintf("Volume\t: %.1f", volume)
 	status["speed"] = fmt.Sprintf("Speed\t: %.3f", speed)
-	return status, Wave2str(GetWave(a.waveform, pos, 800, 100), 30)
+	return status, Wave2str(GetWave(a.waveform, pos, a.sampleInterval, a.windowSize), a.heightMax)
 }
 
 // ListMusic confiel list of music
@@ -189,6 +200,8 @@ func (a *App) LoadMusic(path string) {
 	if err != nil {
 		report(err)
 	}
+	// update title
+	a.title = path
 
 	//var format beep.Format
 	streamer, format, err := mp3.Decode(f)
@@ -197,17 +210,12 @@ func (a *App) LoadMusic(path string) {
 	}
 	// ToDo close streamer when music is switched
 
-	// waveform
-	sampleInterval := 800
-	heightMax := 30
-	valMax := 1.0
-
-	wave := GenWave(streamer, sampleInterval)
+	wave := GenWave(streamer, a.sampleInterval)
 	Smooth(wave)
 	Smooth(wave)
 	Smooth(wave)
 	Smooth(wave)
-	a.waveform = Normalize(wave, float64(heightMax), float64(valMax))
+	a.waveform = Normalize(wave, float64(a.heightMax), float64(a.valMax))
 
 	a.sampleRate = format.SampleRate
 	a.streamer = streamer
@@ -316,7 +324,8 @@ func NewApp() *App {
 		Background(tcell.ColorBlack))
 
 	//music
-	f, err := os.Open("mp3/01.mp3")
+	app.title = "03.mp3"
+	f, err := os.Open("mp3/" + app.title)
 	if err != nil {
 		report(err)
 	}
@@ -330,14 +339,15 @@ func NewApp() *App {
 	// ToDo close streamer when music is switched
 
 	// waveform
-	sampleInterval := 800
-	heightMax := 30
-	valMax := 1.0
+	app.windowSize = 141
+	app.sampleInterval = 800
+	app.heightMax = 15
+	app.valMax = 1.0
 
-	wave := GenWave(streamer, sampleInterval)
+	wave := GenWave(streamer, app.sampleInterval)
 	Smooth(wave)
-	Smooth(wave)
-	app.waveform = Normalize(wave, float64(heightMax), float64(valMax))
+	//Smooth(wave)
+	app.waveform = Normalize(wave, float64(app.heightMax), float64(app.valMax))
 
 	app.sampleRate = format.SampleRate
 	app.streamer = streamer
@@ -356,6 +366,26 @@ func NewApp() *App {
 	return app
 }
 
+type winsize struct {
+	Row    int
+	Col    int
+	Xpixel int
+	Ypixel int
+}
+
+func getWidth() int {
+	ws := &winsize{}
+	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
+		uintptr(syscall.Stdin),
+		uintptr(syscall.TIOCGWINSZ),
+		uintptr(unsafe.Pointer(ws)))
+
+	if int(retCode) == -1 {
+		panic(errno)
+	}
+	return int(ws.Col)
+}
+
 //func (a *App)refresh() {
 //
 //}
@@ -369,8 +399,8 @@ func (a *App) Run() {
 	go func() {
 		for {
 			a.app.Update()
-			// if set time.Millisecond, this app freez...
-			time.Sleep(time.Millisecond * 2)
+			// aim 60fps
+			time.Sleep(time.Millisecond * 16)
 		}
 	}()
 	a.Logf("Starting app loop")

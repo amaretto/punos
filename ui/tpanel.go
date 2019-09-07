@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"time"
 	"unicode"
 
 	"github.com/gdamore/tcell"
@@ -11,8 +10,12 @@ import (
 var (
 	// StyleNormal is
 	StyleNormal = tcell.StyleDefault.
-		Foreground(tcell.ColorSilver).
-		Background(tcell.ColorBlack)
+			Foreground(tcell.ColorSilver).
+			Background(tcell.ColorBlack)
+	// StyleWave is
+	StyleWave = tcell.StyleDefault.
+			Foreground(tcell.ColorBlue).
+			Background(tcell.ColorRed)
 )
 
 type trntblModel struct {
@@ -93,11 +96,11 @@ func (t *TrntblPanel) update() {
 		"| |_) | |_| | | | | (_) \\__ \\",
 		"| .__/ \\__,_|_| |_|\\___/|___/",
 		"|_|",
-		time.Now().String(),
+		status["title"],
 		status["position"],
-		status["cue"],
-		status["volume"],
-		status["speed"],
+		status["info"],
+		//		status["volume"],
+		//		status["speed"],
 	}
 	base = append(base, waveform...)
 
@@ -119,7 +122,7 @@ func (t *TrntblPanel) Init(app *App) {
 		"|_|",
 	})
 	t.SetContent(t.text)
-	t.SetKeys([]string{"[ESC] Quit", "[SPACE] Play/Pause"})
+	t.SetKeys([]string{"[ESC] Quit", "[SPACE] Play/Pause", "[Q/W] Rewind/Fastforward", "[A/S] Volume-/+", "[Z/X] Speed-/+", "[f] Switch Load Panel"})
 }
 
 //NewTrntblPanel return TrntblPanel
