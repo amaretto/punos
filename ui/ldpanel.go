@@ -64,6 +64,10 @@ func (l *LoadPanel) HandleEvent(ev tcell.Event) bool {
 		case 'f':
 			l.App().ShowTrntbl()
 			return true
+			// analyze all music data
+		case 'a':
+			l.App().Analyze()
+			return true
 		}
 	}
 	return l.Panel.HandleEvent(ev)
@@ -249,6 +253,6 @@ func NewLoadPanel(app *App) *LoadPanel {
 	l.content.SetStyle(StyleNormal)
 	l.SetContent(l.content)
 
-	l.SetKeys([]string{"[ESC] Quit", "[J] down", "[K] up", "[L] load"})
+	l.SetKeys([]string{"[ESC] Quit", "[J] Down", "[K] Up", "[L] load", "[A] Analyze All Music"})
 	return l
 }

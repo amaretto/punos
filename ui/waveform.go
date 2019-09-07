@@ -1,7 +1,11 @@
 package ui
 
 import (
+	"bufio"
 	"math"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/faiface/beep"
 )
@@ -115,4 +119,46 @@ func Wave2str(wave []int, limit int) []string {
 		waveStr[limit-i] = str
 	}
 	return waveStr
+}
+
+// WriteWave is
+func WriteWave(wave []int, waveDirPath, title string) {
+	// []int to []string
+	var wsa []string // wave string array
+	wsa = make([]string, len(wave))
+	for i, num := range wave {
+		wsa[i] = strconv.Itoa(num)
+	}
+
+	// out test
+	wfile, err := os.Create(waveDirPath + "/" + title + ".txt")
+	if err != nil {
+		report(err)
+	}
+	defer wfile.Close()
+	wfile.Write(([]byte)(strings.Join(wsa, " ")))
+}
+
+// LoadWave is
+func LoadWave(waveDirPath, title string) []int {
+	// load test
+	lfile, err := os.Open(waveDirPath + "/" + title + ".txt")
+	if err != nil {
+		report(err)
+	}
+	defer lfile.Close()
+
+	var wave []int
+	wave = make([]int, 1000000)
+	var count int
+
+	sc := bufio.NewScanner(lfile)
+	// split by " "
+	sc.Split(bufio.ScanWords)
+	for sc.Scan() {
+		wave[count], _ = strconv.Atoi(sc.Text())
+		count++
+	}
+
+	return wave[:count]
 }

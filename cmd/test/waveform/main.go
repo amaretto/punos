@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"math"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
@@ -15,8 +18,9 @@ func main() {
 	windowSize := 100
 	heightMax := 30
 	valMax := 1.0
+	title := "02.mp3"
 
-	f, err := os.Open("mp3/02.mp3")
+	f, err := os.Open("mp3/" + title)
 	if err != nil {
 		report(err)
 	}
@@ -34,12 +38,58 @@ func main() {
 
 	// wave, position, sampleInterval, windowSize
 	nwave = getWave(nwave, 100000, sampleInterval, windowSize)
+	fmt.Println(nwave)
 
-	wavestr := wave2str(nwave, heightMax)
+	//wavestr := wave2str(nwave, heightMax)
 
-	for _, ws := range wavestr {
-		fmt.Println(ws)
+	//for _, ws := range wavestr {
+	//	fmt.Println(ws)
+	//}
+
+	writeWave(nwave, title)
+	lwave := loadWave(title)
+	fmt.Println(lwave)
+
+}
+
+func writeWave(wave []int, title string) {
+	// []int to []string
+	var wsa []string // wave string array
+	wsa = make([]string, len(wave))
+	for i, num := range wave {
+		wsa[i] = strconv.Itoa(num)
 	}
+
+	// out test
+	wfile, err := os.Create("wave/" + title + ".txt")
+	if err != nil {
+		report(err)
+	}
+	defer wfile.Close()
+	wfile.Write(([]byte)(strings.Join(wsa, " ")))
+}
+
+func loadWave(title string) []int {
+	// load test
+	lfile, err := os.Open("wave/" + title + ".txt")
+	if err != nil {
+		report(err)
+	}
+	defer lfile.Close()
+
+	var wave []int
+	wave = make([]int, 1000000)
+	var count int
+
+	sc := bufio.NewScanner(lfile)
+	// split by " "
+	sc.Split(bufio.ScanWords)
+	for sc.Scan() {
+		wave[count], _ = strconv.Atoi(sc.Text())
+		count++
+	}
+
+	return wave[:count]
 }
 
 func genWave(streamer beep.StreamSeeker, sampleInterval int) []float64 {

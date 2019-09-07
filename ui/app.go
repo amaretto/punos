@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"syscall"
 	"time"
 	"unsafe"
@@ -27,13 +28,14 @@ type App struct {
 	ldpanel *LoadPanel
 	err     error
 	// Music
-	sampleRate beep.SampleRate
-	streamer   beep.StreamSeeker
-	ctrl       *beep.Ctrl
-	resampler  *beep.Resampler
-	volume     *effects.Volume
-	cuePoint   int
-	title      string
+	sampleRate   beep.SampleRate
+	streamer     beep.StreamSeeker
+	ctrl         *beep.Ctrl
+	resampler    *beep.Resampler
+	volume       *effects.Volume
+	cuePoint     int
+	musicTitle   string
+	musicDirPath string
 
 	// Waveform
 	waveform       []int
@@ -41,6 +43,7 @@ type App struct {
 	windowSize     int
 	heightMax      int
 	valMax         float64
+	waveDirPath    string
 
 	views.WidgetWatchers
 }
@@ -169,7 +172,7 @@ func (a *App) Status() (map[string]string, []string) {
 
 	status := map[string]string{}
 
-	status["title"] = fmt.Sprintf("[Title : %s]", a.title)
+	status["title"] = fmt.Sprintf("[Title : %s]", a.musicTitle)
 	status["position"] = fmt.Sprintf("[Position : %s %v / %v]", GetProgressbar(a.windowSize/2, pos, len), position.Round(time.Second), length.Round(time.Second))
 	status["info"] = fmt.Sprintf("[Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", cue.Round(time.Second), volume, speed)
 	status["volume"] = fmt.Sprintf("Volume\t: %.1f", volume)
@@ -201,7 +204,7 @@ func (a *App) LoadMusic(path string) {
 		report(err)
 	}
 	// update title
-	a.title = path
+	a.musicTitle = path
 
 	//var format beep.Format
 	streamer, format, err := mp3.Decode(f)
@@ -210,12 +213,10 @@ func (a *App) LoadMusic(path string) {
 	}
 	// ToDo close streamer when music is switched
 
-	wave := GenWave(streamer, a.sampleInterval)
-	Smooth(wave)
-	Smooth(wave)
-	Smooth(wave)
-	Smooth(wave)
-	a.waveform = Normalize(wave, float64(a.heightMax), float64(a.valMax))
+	//wave := GenWave(streamer, a.sampleInterval)
+	//Smooth(wave)
+	//a.waveform = Normalize(wave, float64(a.heightMax), float64(a.valMax))
+	a.waveform = LoadWave(a.waveDirPath, a.musicTitle)
 
 	a.sampleRate = format.SampleRate
 	a.streamer = streamer
@@ -229,6 +230,32 @@ func (a *App) LoadMusic(path string) {
 	speaker.Lock()
 	a.ctrl.Paused = !a.ctrl.Paused
 	speaker.Unlock()
+}
+
+// Analyze is
+func (a *App) Analyze() {
+	musicList := a.ListMusic()
+	r := regexp.MustCompile(`.*mp3`)
+	for _, music := range musicList {
+		if !r.MatchString(music) {
+			// it isn't mp3
+			continue
+		}
+		f, err := os.Open(a.musicDirPath + "/" + music)
+		if err != nil {
+			report(err)
+		}
+		streamer, _, err := mp3.Decode(f)
+		if err != nil {
+			report(err)
+		}
+		defer streamer.Close()
+		// generate and write each wave info to waveDir
+		wave := GenWave(streamer, a.sampleInterval)
+		Smooth(wave)
+		nwave := Normalize(wave, float64(a.heightMax), float64(a.valMax))
+		WriteWave(nwave, a.waveDirPath, music)
+	}
 }
 
 // Quit is
@@ -324,8 +351,9 @@ func NewApp() *App {
 		Background(tcell.ColorBlack))
 
 	//music
-	app.title = "03.mp3"
-	f, err := os.Open("mp3/" + app.title)
+	app.musicDirPath = "mp3"
+	app.musicTitle = "03.mp3"
+	f, err := os.Open(app.musicDirPath + "/" + app.musicTitle)
 	if err != nil {
 		report(err)
 	}
@@ -339,15 +367,16 @@ func NewApp() *App {
 	// ToDo close streamer when music is switched
 
 	// waveform
+	app.waveDirPath = "wave"
 	app.windowSize = 141
 	app.sampleInterval = 800
 	app.heightMax = 15
 	app.valMax = 1.0
 
-	wave := GenWave(streamer, app.sampleInterval)
-	Smooth(wave)
+	//wave := GenWave(streamer, app.sampleInterval)
 	//Smooth(wave)
-	app.waveform = Normalize(wave, float64(app.heightMax), float64(app.valMax))
+	//app.waveform = Normalize(wave, float64(app.heightMax), float64(app.valMax))
+	app.waveform = LoadWave(app.waveDirPath, app.musicTitle)
 
 	app.sampleRate = format.SampleRate
 	app.streamer = streamer
