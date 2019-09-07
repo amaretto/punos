@@ -300,6 +300,9 @@ func (a *App) LoadMusic(path string) {
 	// first, pause music
 	speaker.Lock()
 	a.ctrl.Paused = !a.ctrl.Paused
+	if a.Mode == "sync" {
+		redisSet("title", a.musicTitle, a.con)
+	}
 	speaker.Unlock()
 }
 
