@@ -12,10 +12,14 @@ var (
 	StyleNormal = tcell.StyleDefault.
 			Foreground(tcell.ColorSilver).
 			Background(tcell.ColorBlack)
-	// StyleWave is
-	StyleWave = tcell.StyleDefault.
-			Foreground(tcell.ColorBlue).
-			Background(tcell.ColorRed)
+	// StyleB2B is
+	StyleB2B = tcell.StyleDefault.
+			Foreground(tcell.ColorSilver).
+			Background(tcell.ColorTeal)
+	// StyleSync is
+	StyleSync = tcell.StyleDefault.
+			Foreground(tcell.ColorSilver).
+			Background(tcell.ColorMaroon)
 )
 
 type trntblModel struct {
@@ -76,6 +80,16 @@ func (t *TrntblPanel) HandleEvent(ev tcell.Event) bool {
 		case 'f':
 			t.App().ShowLdpanel()
 			return true
+		// switch mode
+		case 'n':
+			t.App().SetMode("normal")
+			return true
+		case 'b':
+			t.App().SetMode("b2b")
+			return true
+		case 'm':
+			t.App().SetMode("sync")
+			return true
 		}
 	}
 	return t.Panel.HandleEvent(ev)
@@ -88,6 +102,15 @@ func (t *TrntblPanel) Draw() {
 }
 
 func (t *TrntblPanel) update() {
+
+	// set Style
+	if t.App().Mode == "normal" {
+		t.text.SetStyle(StyleNormal)
+	} else if t.App().Mode == "b2b" {
+		t.text.SetStyle(StyleB2B)
+	} else if t.App().Mode == "sync" {
+		t.text.SetStyle(StyleSync)
+	}
 
 	status, waveform := t.App().Status()
 	base := []string{

@@ -4,18 +4,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"regexp"
+	"strconv"
 	"syscall"
 	"time"
 	"unsafe"
+
+	"google.golang.org/grpc"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
+	"github.com/garyburd/redigo/redis"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
+
+	pb "github.com/amaretto/punos/cmd/test/grpc/pb"
+	"github.com/amaretto/punos/cmd/test/grpc/service"
 )
 
 // App has tcell element creating ui
@@ -44,6 +52,16 @@ type App struct {
 	heightMax      int
 	valMax         float64
 	waveDirPath    string
+
+	// Mode
+	Mode         string
+	b2bAvailable bool
+	// b2b mode
+	b2bTarget string // redis ip and port
+	con       redis.Conn
+	// sync Mode
+	isSync     bool
+	syncTarget string
 
 	views.WidgetWatchers
 }
@@ -84,6 +102,18 @@ func (a *App) PlayPause() {
 	a.Logf("PlayPause!!")
 	speaker.Lock()
 	a.ctrl.Paused = !a.ctrl.Paused
+	if a.Mode == "sync" {
+		//setPos
+		pos := a.streamer.Position()
+		posstr := strconv.Itoa(pos)
+		redisSet("pos", posstr, a.con)
+		//set play/pause
+		if a.ctrl.Paused {
+			redisSet("play", "0", a.con)
+		} else {
+			redisSet("play", "1", a.con)
+		}
+	}
 	speaker.Unlock()
 }
 
@@ -123,8 +153,25 @@ func (a *App) Cue() {
 	} else {
 		speaker.Lock()
 		a.streamer.Seek(a.cuePoint)
+		if a.Mode == "sync" {
+			pos := a.streamer.Position()
+			posstr := strconv.Itoa(pos)
+			redisSet("pos", posstr, a.con)
+		}
 		speaker.Unlock()
 	}
+
+	//Test
+	listenPort, err := net.Listen("tcp", ":19003")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	server := grpc.NewServer()
+	catService := &service.MyCatService{}
+
+	pb.RegisterCatServer(server, catService)
+	server.Serve(listenPort)
+
 }
 
 // Volup is volume controll
@@ -141,6 +188,13 @@ func (a *App) Voldown() {
 	speaker.Unlock()
 }
 
+// SetVol is volume controll
+func (a *App) SetVol(volume float64) {
+	speaker.Lock()
+	a.volume.Volume = volume
+	speaker.Unlock()
+}
+
 // Spdup is speed controll
 func (a *App) Spdup() {
 	speaker.Lock()
@@ -152,6 +206,13 @@ func (a *App) Spdup() {
 func (a *App) Spddown() {
 	speaker.Lock()
 	a.resampler.SetRatio(a.resampler.Ratio() * 15 / 16)
+	speaker.Unlock()
+}
+
+// SetSpd is volume controll
+func (a *App) SetSpd(speed float64) {
+	speaker.Lock()
+	a.resampler.SetRatio(speed)
 	speaker.Unlock()
 }
 
@@ -174,7 +235,7 @@ func (a *App) Status() (map[string]string, []string) {
 
 	status["title"] = fmt.Sprintf("[Title : %s]", a.musicTitle)
 	status["position"] = fmt.Sprintf("[Position : %s %v / %v]", GetProgressbar(a.windowSize/2, pos, len), position.Round(time.Second), length.Round(time.Second))
-	status["info"] = fmt.Sprintf("[Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", cue.Round(time.Second), volume, speed)
+	status["info"] = fmt.Sprintf("[Mode\t: %s]   [Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", a.Mode, cue.Round(time.Second), volume, speed)
 	status["volume"] = fmt.Sprintf("Volume\t: %.1f", volume)
 	status["speed"] = fmt.Sprintf("Speed\t: %.3f", speed)
 	return status, Wave2str(GetWave(a.waveform, pos, a.sampleInterval, a.windowSize), a.heightMax)
@@ -340,6 +401,19 @@ func (a *App) GetAppName() string {
 	return "punos v0.1"
 }
 
+/////////////////////////////////////////////////////
+////////////////////// mode /////////////////////////
+/////////////////////////////////////////////////////
+
+// SetMode is
+func (a *App) SetMode(mode string) {
+	if !a.b2bAvailable {
+		a.Mode = "normal"
+	} else {
+		a.Mode = mode
+	}
+}
+
 // NewApp generate new applicaiton
 func NewApp() *App {
 	app := &App{}
@@ -372,11 +446,11 @@ func NewApp() *App {
 	app.sampleInterval = 800
 	app.heightMax = 15
 	app.valMax = 1.0
-
-	//wave := GenWave(streamer, app.sampleInterval)
-	//Smooth(wave)
-	//app.waveform = Normalize(wave, float64(app.heightMax), float64(app.valMax))
 	app.waveform = LoadWave(app.waveDirPath, app.musicTitle)
+
+	// mode
+	app.Mode = "normal"
+	app.b2bTarget = "192.168.1.95:6379"
 
 	app.sampleRate = format.SampleRate
 	app.streamer = streamer
@@ -415,25 +489,123 @@ func getWidth() int {
 	return int(ws.Col)
 }
 
-//func (a *App)refresh() {
-//
-//}
-
 // Run the app
 func (a *App) Run() {
 	a.Logf("Punos")
 	a.app.SetRootWidget(a)
 	a.ShowTrntbl()
+
+	// for b2b mode
+	// need to see difference
+	var tmpPlay string
+	var newPlay string
+	var tmpTitle string
+	var newTitle string
+	var tmppos string
+	var newpos string
+	var tmpVolume string
+	var newVolume string
+	var tmpSpeed string
+	var newSpeed string
+
+	var err error
+	a.con, err = redisConnection(a.b2bTarget)
+	// if redis isn't exist, b2b is not available
+	if err != nil {
+		a.b2bAvailable = false
+	} else {
+		a.b2bAvailable = true
+		//isPaused(0:pause,1:play)
+		tmpPlay = "0"
+		newPlay = "0"
+		redisSet("play", "0", a.con)
+		//title
+		tmpTitle = a.musicTitle
+		redisSet("title", a.musicTitle, a.con)
+		//pos
+		tmppos = "0"
+		redisSet("pos", "0", a.con)
+		//volume
+		tmpVolume := strconv.FormatFloat(a.volume.Volume, 'f', 4, 64)
+		redisSet("volume", tmpVolume, a.con)
+		//speed
+		tmpSpeed := strconv.FormatFloat(a.resampler.Ratio(), 'f', 4, 64)
+		redisSet("speed", tmpSpeed, a.con)
+	}
+
 	// call update each second
 	go func() {
 		for {
 			a.app.Update()
-			// aim 60fps
+			// aim 60fps(like fighting game)
 			time.Sleep(time.Millisecond * 16)
+			// for b2b mode
+			if a.Mode == "b2b" {
+				//isPaused
+				newPlay = redisGet("play", a.con)
+				if newPlay != tmpPlay {
+					a.PlayPause()
+					tmpPlay = newPlay
+					redisSet("play", tmpPlay, a.con)
+				}
+				//title
+				newTitle = redisGet("title", a.con)
+				if newTitle != tmpTitle {
+					a.LoadMusic(newTitle)
+					tmpTitle = newTitle
+					redisSet("title", tmpTitle, a.con)
+				}
+				//position
+				newpos = redisGet("pos", a.con)
+				if newpos != tmppos {
+					pos, _ := strconv.Atoi(newpos)
+					a.streamer.Seek(pos)
+					// reset position
+					tmppos = "0"
+					newpos = "0"
+					redisSet("pos", "0", a.con)
+				}
+				//volume
+				newVolume = redisGet("volume", a.con)
+				if newVolume != tmpVolume {
+					volume, _ := strconv.ParseFloat(newVolume, 64)
+					a.SetVol(volume)
+					tmpVolume = newVolume
+					redisSet("volume", tmpVolume, a.con)
+				}
+				//speed
+				newSpeed = redisGet("speed", a.con)
+				if newSpeed != tmpSpeed {
+					speed, _ := strconv.ParseFloat(newSpeed, 64)
+					a.SetSpd(speed)
+					tmpSpeed = newSpeed
+					redisSet("speed", tmpSpeed, a.con)
+				}
+			}
 		}
 	}()
 	a.Logf("Starting app loop")
 	a.app.Run()
+}
+
+// Redis functions
+func redisConnection(target string) (redis.Conn, error) {
+
+	c, err := redis.Dial("tcp", target)
+	return c, err
+}
+
+func redisSet(key string, value string, c redis.Conn) {
+	c.Do("SET", key, value)
+}
+
+func redisGet(key string, c redis.Conn) string {
+	s, err := redis.String(c.Do("GET", key))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return s
 }
 
 func report(err error) {
