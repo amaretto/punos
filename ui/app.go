@@ -114,7 +114,7 @@ func (a *App) PlayPause() {
 // Fforward is fast forward module
 func (a *App) Fforward() {
 	speaker.Lock()
-	newPos := a.streamer.Position() + a.sampleRate.N(time.Second)
+	newPos := a.streamer.Position() + a.sampleRate.N(time.Millisecond*100)
 	if newPos >= a.streamer.Len() {
 		newPos = a.streamer.Len() - 1
 	}
@@ -133,7 +133,7 @@ func (a *App) Fforward() {
 // Rewind is
 func (a *App) Rewind() {
 	speaker.Lock()
-	newPos := a.streamer.Position() - a.sampleRate.N(time.Second)
+	newPos := a.streamer.Position() - a.sampleRate.N(time.Millisecond*100)
 	if newPos < 0 {
 		newPos = 0
 	}
@@ -457,7 +457,7 @@ func NewApp() *App {
 	app.waveDirPath = "wave"
 	app.windowSize = 141
 	app.sampleInterval = 800
-	app.heightMax = 15
+	app.heightMax = 25
 	app.valMax = 1.0
 	app.waveform = LoadWave(app.waveDirPath, app.musicTitle)
 

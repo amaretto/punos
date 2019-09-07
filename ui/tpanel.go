@@ -14,12 +14,12 @@ var (
 			Background(tcell.ColorBlack)
 	// StyleB2B is
 	StyleB2B = tcell.StyleDefault.
-			Foreground(tcell.ColorSilver).
-			Background(tcell.ColorTeal)
+			Background(tcell.NewHexColor(0x096148)).
+			Foreground(tcell.NewHexColor(0xD7D8A2))
 	// StyleSync is
 	StyleSync = tcell.StyleDefault.
-			Foreground(tcell.ColorSilver).
-			Background(tcell.ColorMaroon)
+			Background(tcell.NewHexColor(0x473437)).
+			Foreground(tcell.NewHexColor(0xD7D8A2))
 )
 
 type trntblModel struct {
