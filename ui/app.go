@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"regexp"
 	"strconv"
 	"syscall"
 	"time"
 	"unsafe"
-
-	"google.golang.org/grpc"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
@@ -21,9 +18,6 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
-
-	pb "github.com/amaretto/punos/cmd/test/grpc/pb"
-	"github.com/amaretto/punos/cmd/test/grpc/service"
 )
 
 // App has tcell element creating ui
@@ -127,6 +121,12 @@ func (a *App) Fforward() {
 	if err := a.streamer.Seek(newPos); err != nil {
 		report(err)
 	}
+	if a.Mode == "sync" {
+		//setPos
+		pos := a.streamer.Position()
+		posstr := strconv.Itoa(pos)
+		redisSet("pos", posstr, a.con)
+	}
 	speaker.Unlock()
 }
 
@@ -139,6 +139,12 @@ func (a *App) Rewind() {
 	}
 	if err := a.streamer.Seek(newPos); err != nil {
 		report(err)
+	}
+	if a.Mode == "sync" {
+		//setPos
+		pos := a.streamer.Position()
+		posstr := strconv.Itoa(pos)
+		redisSet("pos", posstr, a.con)
 	}
 	speaker.Unlock()
 }
@@ -160,24 +166,16 @@ func (a *App) Cue() {
 		}
 		speaker.Unlock()
 	}
-
-	//Test
-	listenPort, err := net.Listen("tcp", ":19003")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	server := grpc.NewServer()
-	catService := &service.MyCatService{}
-
-	pb.RegisterCatServer(server, catService)
-	server.Serve(listenPort)
-
 }
 
 // Volup is volume controll
 func (a *App) Volup() {
 	speaker.Lock()
 	a.volume.Volume += 0.1
+	if a.Mode == "sync" {
+		volume := strconv.FormatFloat(a.volume.Volume, 'f', 4, 64)
+		redisSet("volume", volume, a.con)
+	}
 	speaker.Unlock()
 }
 
@@ -185,6 +183,10 @@ func (a *App) Volup() {
 func (a *App) Voldown() {
 	speaker.Lock()
 	a.volume.Volume -= 0.1
+	if a.Mode == "sync" {
+		volume := strconv.FormatFloat(a.volume.Volume, 'f', 4, 64)
+		redisSet("volume", volume, a.con)
+	}
 	speaker.Unlock()
 }
 
@@ -199,6 +201,10 @@ func (a *App) SetVol(volume float64) {
 func (a *App) Spdup() {
 	speaker.Lock()
 	a.resampler.SetRatio(a.resampler.Ratio() * 16 / 15)
+	if a.Mode == "sync" {
+		speed := strconv.FormatFloat(a.resampler.Ratio(), 'f', 4, 64)
+		redisSet("speed", speed, a.con)
+	}
 	speaker.Unlock()
 }
 
@@ -206,6 +212,10 @@ func (a *App) Spdup() {
 func (a *App) Spddown() {
 	speaker.Lock()
 	a.resampler.SetRatio(a.resampler.Ratio() * 15 / 16)
+	if a.Mode == "sync" {
+		speed := strconv.FormatFloat(a.resampler.Ratio(), 'f', 4, 64)
+		redisSet("speed", speed, a.con)
+	}
 	speaker.Unlock()
 }
 
