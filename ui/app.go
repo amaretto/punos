@@ -463,7 +463,7 @@ func NewApp() *App {
 
 	// mode
 	app.Mode = "normal"
-	app.b2bTarget = "192.168.1.95:6379"
+	app.b2bTarget = "192.168.1.40:6379"
 
 	app.sampleRate = format.SampleRate
 	app.streamer = streamer
