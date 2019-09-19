@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
-	"syscall"
+	"strings"
 	"time"
-	"unsafe"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
@@ -281,7 +281,6 @@ func (a *App) LoadMusic(path string) {
 	}
 	// ToDo close streamer when music is switched
 
-	//a.waveform = LoadWave(a.waveDirPath, a.musicTitle)
 	a.wave.Wave = LoadWave(a.wave.WaveDirPath, a.musicTitle)
 
 	a.sampleRate = format.SampleRate
@@ -301,7 +300,7 @@ func (a *App) LoadMusic(path string) {
 	speaker.Unlock()
 }
 
-// Analyze is
+// Analyze analyze musics and create waveform
 func (a *App) Analyze() {
 	musicList := a.ListMusic()
 	r := regexp.MustCompile(`.*mp3`)
@@ -432,6 +431,9 @@ func NewApp() *App {
 		Foreground(tcell.ColorSilver).
 		Background(tcell.ColorBlack))
 
+	// get window size
+	_, width := getWindowSize()
+
 	//music
 	app.musicDirPath = "mp3"
 	app.musicTitle = "03.mp3"
@@ -449,7 +451,7 @@ func NewApp() *App {
 	// ToDo close streamer when music is switched
 
 	// waveform
-	app.wave = Waveform{SampleInterval: 800, WindowSize: 141, HeightMax: 25, ValMax: 1.0, WaveDirPath: "wave"}
+	app.wave = Waveform{SampleInterval: 800, WindowSize: width, HeightMax: 25, ValMax: 1.0, WaveDirPath: "wave"}
 	app.wave.Wave = LoadWave(app.wave.WaveDirPath, app.musicTitle)
 
 	// mode
@@ -473,24 +475,21 @@ func NewApp() *App {
 	return app
 }
 
-type winsize struct {
-	Row    int
-	Col    int
-	Xpixel int
-	Ypixel int
-}
-
-func getWidth() int {
-	ws := &winsize{}
-	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(syscall.Stdin),
-		uintptr(syscall.TIOCGWINSZ),
-		uintptr(unsafe.Pointer(ws)))
-
-	if int(retCode) == -1 {
-		panic(errno)
+func getWindowSize() (height, width int) {
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	out, err := cmd.Output()
+	result := string(out)
+	result = strings.TrimRight(result, "\n")
+	window := strings.Split(result, " ")
+	if err != nil {
+		log.Fatal(err)
 	}
-	return int(ws.Col)
+
+	height, _ = strconv.Atoi(window[0])
+	width, _ = strconv.Atoi(window[1])
+
+	return
 }
 
 // Run the app
@@ -500,16 +499,11 @@ func (a *App) Run() {
 
 	// for b2b mode
 	// need to see difference
-	var tmpPlay string
-	var newPlay string
-	var tmpTitle string
-	var newTitle string
-	var tmppos string
-	var newpos string
-	var tmpVolume string
-	var newVolume string
-	var tmpSpeed string
-	var newSpeed string
+	var tmpPlay, newPlay string
+	var tmpTitle, newTitle string
+	var tmppos, newpos string
+	var tmpVolume, newVolume string
+	var tmpSpeed, newSpeed string
 
 	var err error
 	a.con, err = redisConnection(a.b2bTarget)
