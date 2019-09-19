@@ -29,6 +29,7 @@ type App struct {
 	trntbl  *TrntblPanel
 	ldpanel *LoadPanel
 	err     error
+
 	// Music
 	sampleRate   beep.SampleRate
 	streamer     beep.StreamSeeker
@@ -40,12 +41,7 @@ type App struct {
 	musicDirPath string
 
 	// Waveform
-	waveform       []int
-	sampleInterval int
-	windowSize     int
-	heightMax      int
-	valMax         float64
-	waveDirPath    string
+	wave Waveform
 
 	// Mode
 	Mode         string
@@ -59,6 +55,10 @@ type App struct {
 
 	views.WidgetWatchers
 }
+
+/////////////////////////////////////////////////////
+////////////////// panel transition /////////////////
+/////////////////////////////////////////////////////
 
 // for switch Panels
 func (a *App) show(w views.Widget) {
@@ -75,16 +75,14 @@ func (a *App) show(w views.Widget) {
 
 // ShowTrntbl show trntbl Panel
 func (a *App) ShowTrntbl() {
-	a.Logf("in ShowTrntbl")
 	a.show(a.trntbl)
 	a.panel = a.trntbl
 }
 
 // ShowLdpanel show LoadPanel
 func (a *App) ShowLdpanel() {
-	a.Logf("in ShowLdpanel")
 	a.show(a.ldpanel)
-	a.panel = a.trntbl
+	a.panel = a.ldpanel
 }
 
 /////////////////////////////////////////////////////
@@ -93,7 +91,6 @@ func (a *App) ShowLdpanel() {
 
 // PlayPause is
 func (a *App) PlayPause() {
-	a.Logf("PlayPause!!")
 	speaker.Lock()
 	a.ctrl.Paused = !a.ctrl.Paused
 	if a.Mode == "sync" {
@@ -111,7 +108,7 @@ func (a *App) PlayPause() {
 	speaker.Unlock()
 }
 
-// Fforward is fast forward module
+// Fforward fast-forward music
 func (a *App) Fforward() {
 	speaker.Lock()
 	newPos := a.streamer.Position() + a.sampleRate.N(time.Millisecond*100)
@@ -130,7 +127,7 @@ func (a *App) Fforward() {
 	speaker.Unlock()
 }
 
-// Rewind is
+// Rewind rewind music
 func (a *App) Rewind() {
 	speaker.Lock()
 	newPos := a.streamer.Position() - a.sampleRate.N(time.Millisecond*100)
@@ -149,9 +146,8 @@ func (a *App) Rewind() {
 	speaker.Unlock()
 }
 
-// Cue is
+// Cue set and return cue point
 func (a *App) Cue() {
-	a.Logf("Cue!!")
 	if a.ctrl.Paused {
 		speaker.Lock()
 		a.cuePoint = a.streamer.Position()
@@ -168,7 +164,7 @@ func (a *App) Cue() {
 	}
 }
 
-// Volup is volume controll
+// Volup increase volume of music
 func (a *App) Volup() {
 	speaker.Lock()
 	a.volume.Volume += 0.1
@@ -179,7 +175,7 @@ func (a *App) Volup() {
 	speaker.Unlock()
 }
 
-// Voldown is volume controll
+// Voldown decrease volume of music
 func (a *App) Voldown() {
 	speaker.Lock()
 	a.volume.Volume -= 0.1
@@ -190,14 +186,14 @@ func (a *App) Voldown() {
 	speaker.Unlock()
 }
 
-// SetVol is volume controll
+// SetVol set volume
 func (a *App) SetVol(volume float64) {
 	speaker.Lock()
 	a.volume.Volume = volume
 	speaker.Unlock()
 }
 
-// Spdup is speed controll
+// Spdup increase speed controll
 func (a *App) Spdup() {
 	speaker.Lock()
 	a.resampler.SetRatio(a.resampler.Ratio() * 16 / 15)
@@ -208,7 +204,7 @@ func (a *App) Spdup() {
 	speaker.Unlock()
 }
 
-// Spddown is volume controll
+// Spddown decrease volume controll
 func (a *App) Spddown() {
 	speaker.Lock()
 	a.resampler.SetRatio(a.resampler.Ratio() * 15 / 16)
@@ -219,7 +215,7 @@ func (a *App) Spddown() {
 	speaker.Unlock()
 }
 
-// SetSpd is volume controll
+// SetSpd set speed
 func (a *App) SetSpd(speed float64) {
 	speaker.Lock()
 	a.resampler.SetRatio(speed)
@@ -243,12 +239,13 @@ func (a *App) Status() (map[string]string, []string) {
 
 	status := map[string]string{}
 
+	// ToDo : building string set should move panel
 	status["title"] = fmt.Sprintf("[Title : %s]", a.musicTitle)
-	status["position"] = fmt.Sprintf("[Position : %s %v / %v]", GetProgressbar(a.windowSize/2, pos, len), position.Round(time.Second), length.Round(time.Second))
+	status["position"] = fmt.Sprintf("[Position : %s %v / %v]", GetProgressbar(a.wave.WindowSize/2, pos, len), position.Round(time.Second), length.Round(time.Second))
 	status["info"] = fmt.Sprintf("[Mode\t: %s]   [Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", a.Mode, cue.Round(time.Second), volume, speed)
 	status["volume"] = fmt.Sprintf("Volume\t: %.1f", volume)
 	status["speed"] = fmt.Sprintf("Speed\t: %.3f", speed)
-	return status, Wave2str(GetWave(a.waveform, pos, a.sampleInterval, a.windowSize), a.heightMax)
+	return status, a.wave.GetWaveStr(pos)
 }
 
 // ListMusic confiel list of music
@@ -284,10 +281,8 @@ func (a *App) LoadMusic(path string) {
 	}
 	// ToDo close streamer when music is switched
 
-	//wave := GenWave(streamer, a.sampleInterval)
-	//Smooth(wave)
-	//a.waveform = Normalize(wave, float64(a.heightMax), float64(a.valMax))
-	a.waveform = LoadWave(a.waveDirPath, a.musicTitle)
+	//a.waveform = LoadWave(a.waveDirPath, a.musicTitle)
+	a.wave.Wave = LoadWave(a.wave.WaveDirPath, a.musicTitle)
 
 	a.sampleRate = format.SampleRate
 	a.streamer = streamer
@@ -325,10 +320,10 @@ func (a *App) Analyze() {
 		}
 		defer streamer.Close()
 		// generate and write each wave info to waveDir
-		wave := GenWave(streamer, a.sampleInterval)
-		Smooth(wave)
-		nwave := Normalize(wave, float64(a.heightMax), float64(a.valMax))
-		WriteWave(nwave, a.waveDirPath, music)
+		rwave := GenRawWave(streamer, a.wave.SampleInterval)
+		SmoothRawWave(rwave)
+		nwave := NormalizeRawWave(rwave, float64(a.wave.HeightMax), float64(a.wave.ValMax))
+		WriteWave(nwave, a.wave.WaveDirPath, music)
 	}
 }
 
@@ -454,12 +449,8 @@ func NewApp() *App {
 	// ToDo close streamer when music is switched
 
 	// waveform
-	app.waveDirPath = "wave"
-	app.windowSize = 141
-	app.sampleInterval = 800
-	app.heightMax = 25
-	app.valMax = 1.0
-	app.waveform = LoadWave(app.waveDirPath, app.musicTitle)
+	app.wave = Waveform{SampleInterval: 800, WindowSize: 141, HeightMax: 25, ValMax: 1.0, WaveDirPath: "wave"}
+	app.wave.Wave = LoadWave(app.wave.WaveDirPath, app.musicTitle)
 
 	// mode
 	app.Mode = "normal"
@@ -504,7 +495,6 @@ func getWidth() int {
 
 // Run the app
 func (a *App) Run() {
-	a.Logf("Punos")
 	a.app.SetRootWidget(a)
 	a.ShowTrntbl()
 
@@ -597,28 +587,7 @@ func (a *App) Run() {
 			}
 		}
 	}()
-	a.Logf("Starting app loop")
 	a.app.Run()
-}
-
-// Redis functions
-func redisConnection(target string) (redis.Conn, error) {
-
-	c, err := redis.Dial("tcp", target)
-	return c, err
-}
-
-func redisSet(key string, value string, c redis.Conn) {
-	c.Do("SET", key, value)
-}
-
-func redisGet(key string, c redis.Conn) string {
-	s, err := redis.String(c.Do("GET", key))
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return s
 }
 
 func report(err error) {
