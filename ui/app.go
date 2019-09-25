@@ -5,10 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/faiface/beep"
@@ -250,12 +248,16 @@ func (a *App) Status() (map[string]string, []string) {
 
 // ListMusic confiel list of music
 func (a *App) ListMusic() []string {
+	// ToDo : use path specified by user
 	cd, _ := os.Getwd()
 	fileinfos, _ := ioutil.ReadDir(cd + "/mp3")
-	list := make([]string, len(fileinfos))
-	for i, fileinfo := range fileinfos {
-		// ToDo : need validation check
-		list[i] = fileinfo.Name()
+	var list []string
+	r := regexp.MustCompile(`.*mp3`)
+	for _, fileinfo := range fileinfos {
+		if !r.MatchString(fileinfo.Name()) {
+			continue
+		}
+		list = append(list, fileinfo.Name())
 	}
 	return list
 }
@@ -432,7 +434,7 @@ func NewApp() *App {
 		Background(tcell.ColorBlack))
 
 	// get window size
-	_, width := getWindowSize()
+	_, width := GetWindowSize()
 
 	//music
 	app.musicDirPath = "mp3"
@@ -473,23 +475,6 @@ func NewApp() *App {
 
 	//go app.refresh()
 	return app
-}
-
-func getWindowSize() (height, width int) {
-	cmd := exec.Command("stty", "size")
-	cmd.Stdin = os.Stdin
-	out, err := cmd.Output()
-	result := string(out)
-	result = strings.TrimRight(result, "\n")
-	window := strings.Split(result, " ")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	height, _ = strconv.Atoi(window[0])
-	width, _ = strconv.Atoi(window[1])
-
-	return
 }
 
 // Run the app
