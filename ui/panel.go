@@ -27,11 +27,6 @@ func (p *Panel) SetKeys(words []string) {
 	p.kb.SetKeys(words)
 }
 
-//// SetTitle is
-//func (p *Panel) SetTitle(title string) {
-//	p.tb.SetCenter(title)
-//}
-
 // Init is
 func (p *Panel) Init(app *App) {
 	p.once.Do(func() {

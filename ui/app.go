@@ -284,6 +284,7 @@ func (a *App) LoadMusic(path string) {
 	// ToDo close streamer when music is switched
 
 	a.wave.Wave = LoadWave(a.wave.WaveDirPath, a.musicTitle)
+	a.wave.NormalizeWave()
 
 	a.sampleRate = format.SampleRate
 	a.streamer = streamer
@@ -434,7 +435,7 @@ func NewApp() *App {
 		Background(tcell.ColorBlack))
 
 	// get window size
-	_, width := GetWindowSize()
+	height, width := GetWindowSize()
 
 	//music
 	app.musicDirPath = "mp3"
@@ -453,8 +454,9 @@ func NewApp() *App {
 	// ToDo close streamer when music is switched
 
 	// waveform
-	app.wave = Waveform{SampleInterval: 800, WindowSize: width, HeightMax: 25, ValMax: 1.0, WaveDirPath: "wave"}
+	app.wave = Waveform{SampleInterval: 800, WindowSize: width, HeightMax: height / 2, ValMax: 1.0, WaveDirPath: "wave"}
 	app.wave.Wave = LoadWave(app.wave.WaveDirPath, app.musicTitle)
+	app.wave.NormalizeWave()
 
 	// mode
 	app.Mode = "normal"

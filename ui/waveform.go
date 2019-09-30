@@ -120,7 +120,7 @@ func Wave2str(wave []int, limit int) []string {
 		for j, num := range wave {
 			if j == len(wave)/2-1 {
 				str = str + "|"
-			} else if num == i || fill[num] {
+			} else if num >= i || fill[num] {
 				str = str + "#"
 				fill[num] = true
 			} else {
@@ -177,4 +177,24 @@ func LoadWave(waveDirPath, title string) []int {
 	}
 
 	return wave[:count]
+}
+
+// NormalizeWave is
+func (wf *Waveform) NormalizeWave() {
+	maxVal := max(wf.Wave)
+	nwave := make([]int, len(wf.Wave))
+	for i, num := range wf.Wave {
+		nwave[i] = int(math.Ceil(float64(wf.HeightMax) * float64(num) / float64(maxVal)))
+	}
+	wf.Wave = nwave
+}
+
+func max(a []int) int {
+	max := a[0]
+	for _, i := range a {
+		if i > max {
+			max = i
+		}
+	}
+	return max
 }
