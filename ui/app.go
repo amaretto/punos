@@ -369,8 +369,17 @@ func NewApp() *App {
 	height, width := GetWindowSize()
 
 	//music
+	//ToDo : Set Default Music
+	// if there are no music in "mp3" directory,show "please insert at leaset one audio file into "mp3" directory"
+	list := app.ListMusic()
 	app.musicDirPath = "mp3"
-	app.musicTitle = "03.mp3"
+	//ToDO : fix it
+	if len(list) == 0 {
+		fmt.Println("Please insert at lease one audio file into \"mp3\" diretctory")
+		panic("error")
+	}
+	app.musicTitle = list[0]
+	//app.musicTitle = "03.mp3"
 	f, err := os.Open(app.musicDirPath + "/" + app.musicTitle)
 	if err != nil {
 		report(err)
@@ -386,6 +395,16 @@ func NewApp() *App {
 
 	// waveform
 	app.wave = Waveform{SampleInterval: 800, WindowSize: width, HeightMax: height / 2, ValMax: 1.0, WaveDirPath: "wave"}
+	// ToDo : if there are no waveform file, call analyze function
+	// ToDo : Check existance of the file reffered
+	if !exists(app.wave.WaveDirPath) {
+		// ToDo:create directory
+		os.Mkdir("wave", 0755)
+	}
+	if !exists(app.wave.WaveDirPath + "/" + app.musicTitle + ".txt") {
+		app.Analyze()
+	}
+
 	app.wave.Wave = LoadWave(app.wave.WaveDirPath, app.musicTitle)
 	app.wave.NormalizeWave()
 
@@ -423,6 +442,12 @@ func (a *App) Run() {
 		}
 	}()
 	a.app.Run()
+}
+
+func exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+
 }
 
 func report(err error) {
