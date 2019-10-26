@@ -3,7 +3,7 @@
 As is well known, people sometimes want to DJ, and Engineers always use CUI are no exception.
 Punos is tool for DJing on CUI target such people and written in Go.
 
-!(image)[https://i.imgur.com/gxmA6dT.gif]
+![punos](https://user-images.githubusercontent.com/1157121/67624665-87350280-f86e-11e9-8c25-ec07e1518a83.gif)
 
 ## Features
 - Play music
