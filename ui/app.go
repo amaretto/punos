@@ -6,14 +6,12 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
-	"github.com/garyburd/redigo/redis"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/views"
 )
@@ -24,7 +22,7 @@ type App struct {
 	view    views.View
 	panel   views.Widget
 	logger  *log.Logger
-	trntbl  *TrntblPanel
+	ppanel  *PunosPanel
 	ldpanel *LoadPanel
 	err     error
 
@@ -40,16 +38,6 @@ type App struct {
 
 	// Waveform
 	wave Waveform
-
-	// Mode
-	Mode         string
-	b2bAvailable bool
-	// b2b mode
-	b2bTarget string // redis ip and port
-	con       redis.Conn
-	// sync Mode
-	isSync     bool
-	syncTarget string
 
 	views.WidgetWatchers
 }
@@ -71,10 +59,10 @@ func (a *App) show(w views.Widget) {
 	})
 }
 
-// ShowTrntbl show trntbl Panel
-func (a *App) ShowTrntbl() {
-	a.show(a.trntbl)
-	a.panel = a.trntbl
+// ShowPunosPanel show PunosPanel
+func (a *App) ShowPunosPanel() {
+	a.show(a.ppanel)
+	a.panel = a.ppanel
 }
 
 // ShowLdpanel show LoadPanel
@@ -91,18 +79,6 @@ func (a *App) ShowLdpanel() {
 func (a *App) PlayPause() {
 	speaker.Lock()
 	a.ctrl.Paused = !a.ctrl.Paused
-	if a.Mode == "sync" {
-		//setPos
-		pos := a.streamer.Position()
-		posstr := strconv.Itoa(pos)
-		redisSet("pos", posstr, a.con)
-		//set play/pause
-		if a.ctrl.Paused {
-			redisSet("play", "0", a.con)
-		} else {
-			redisSet("play", "1", a.con)
-		}
-	}
 	speaker.Unlock()
 }
 
@@ -115,12 +91,6 @@ func (a *App) Fforward() {
 	}
 	if err := a.streamer.Seek(newPos); err != nil {
 		report(err)
-	}
-	if a.Mode == "sync" {
-		//setPos
-		pos := a.streamer.Position()
-		posstr := strconv.Itoa(pos)
-		redisSet("pos", posstr, a.con)
 	}
 	speaker.Unlock()
 }
@@ -135,12 +105,6 @@ func (a *App) Rewind() {
 	if err := a.streamer.Seek(newPos); err != nil {
 		report(err)
 	}
-	if a.Mode == "sync" {
-		//setPos
-		pos := a.streamer.Position()
-		posstr := strconv.Itoa(pos)
-		redisSet("pos", posstr, a.con)
-	}
 	speaker.Unlock()
 }
 
@@ -153,11 +117,6 @@ func (a *App) Cue() {
 	} else {
 		speaker.Lock()
 		a.streamer.Seek(a.cuePoint)
-		if a.Mode == "sync" {
-			pos := a.streamer.Position()
-			posstr := strconv.Itoa(pos)
-			redisSet("pos", posstr, a.con)
-		}
 		speaker.Unlock()
 	}
 }
@@ -166,10 +125,6 @@ func (a *App) Cue() {
 func (a *App) Volup() {
 	speaker.Lock()
 	a.volume.Volume += 0.1
-	if a.Mode == "sync" {
-		volume := strconv.FormatFloat(a.volume.Volume, 'f', 4, 64)
-		redisSet("volume", volume, a.con)
-	}
 	speaker.Unlock()
 }
 
@@ -177,10 +132,6 @@ func (a *App) Volup() {
 func (a *App) Voldown() {
 	speaker.Lock()
 	a.volume.Volume -= 0.1
-	if a.Mode == "sync" {
-		volume := strconv.FormatFloat(a.volume.Volume, 'f', 4, 64)
-		redisSet("volume", volume, a.con)
-	}
 	speaker.Unlock()
 }
 
@@ -195,10 +146,6 @@ func (a *App) SetVol(volume float64) {
 func (a *App) Spdup() {
 	speaker.Lock()
 	a.resampler.SetRatio(a.resampler.Ratio() * 16 / 15)
-	if a.Mode == "sync" {
-		speed := strconv.FormatFloat(a.resampler.Ratio(), 'f', 4, 64)
-		redisSet("speed", speed, a.con)
-	}
 	speaker.Unlock()
 }
 
@@ -206,10 +153,6 @@ func (a *App) Spdup() {
 func (a *App) Spddown() {
 	speaker.Lock()
 	a.resampler.SetRatio(a.resampler.Ratio() * 15 / 16)
-	if a.Mode == "sync" {
-		speed := strconv.FormatFloat(a.resampler.Ratio(), 'f', 4, 64)
-		redisSet("speed", speed, a.con)
-	}
 	speaker.Unlock()
 }
 
@@ -240,7 +183,7 @@ func (a *App) Status() (map[string]string, []string) {
 	// ToDo : building string set should move panel
 	status["title"] = fmt.Sprintf("[Title : %s]", a.musicTitle)
 	status["position"] = fmt.Sprintf("[Position : %s %v / %v]", GetProgressbar(a.wave.WindowSize/2, pos, len), position.Round(time.Second), length.Round(time.Second))
-	status["info"] = fmt.Sprintf("[Mode\t: %s]   [Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", a.Mode, cue.Round(time.Second), volume, speed)
+	status["info"] = fmt.Sprintf("[Mode\t: Normal]   [Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", cue.Round(time.Second), volume, speed)
 	status["volume"] = fmt.Sprintf("Volume\t: %.1f", volume)
 	status["speed"] = fmt.Sprintf("Speed\t: %.3f", speed)
 	return status, a.wave.GetWaveStr(pos)
@@ -262,7 +205,7 @@ func (a *App) ListMusic() []string {
 	return list
 }
 
-// LoadMusic load a music to trntbl panel
+// LoadMusic load a music to PunosPanel
 func (a *App) LoadMusic(path string) {
 	speaker.Lock()
 	a.ctrl.Paused = true
@@ -297,9 +240,6 @@ func (a *App) LoadMusic(path string) {
 	// first, pause music
 	speaker.Lock()
 	a.ctrl.Paused = !a.ctrl.Paused
-	if a.Mode == "sync" {
-		redisSet("title", a.musicTitle, a.con)
-	}
 	speaker.Unlock()
 }
 
@@ -415,20 +355,11 @@ func (a *App) GetAppName() string {
 ////////////////////// mode /////////////////////////
 /////////////////////////////////////////////////////
 
-// SetMode is
-func (a *App) SetMode(mode string) {
-	if !a.b2bAvailable {
-		a.Mode = "normal"
-	} else {
-		a.Mode = mode
-	}
-}
-
 // NewApp generate new applicaiton
 func NewApp() *App {
 	app := &App{}
 	app.app = &views.Application{}
-	app.trntbl = NewTrntblPanel(app)
+	app.ppanel = NewPunosPanel(app)
 	app.ldpanel = NewLoadPanel(app)
 	app.app.SetStyle(tcell.StyleDefault.
 		Foreground(tcell.ColorSilver).
@@ -458,10 +389,6 @@ func NewApp() *App {
 	app.wave.Wave = LoadWave(app.wave.WaveDirPath, app.musicTitle)
 	app.wave.NormalizeWave()
 
-	// mode
-	app.Mode = "normal"
-	app.b2bTarget = "192.168.1.40:6379"
-
 	app.sampleRate = format.SampleRate
 	app.streamer = streamer
 	app.ctrl = &beep.Ctrl{Streamer: beep.Loop(-1, app.streamer)}
@@ -481,91 +408,18 @@ func NewApp() *App {
 
 // Run the app
 func (a *App) Run() {
+	a.logger.Printf("Start App Running!")
+
 	a.app.SetRootWidget(a)
-	a.ShowTrntbl()
+	a.ShowPunosPanel()
 
-	// for b2b mode
-	// need to see difference
-	var tmpPlay, newPlay string
-	var tmpTitle, newTitle string
-	var tmppos, newpos string
-	var tmpVolume, newVolume string
-	var tmpSpeed, newSpeed string
-
-	var err error
-	a.con, err = redisConnection(a.b2bTarget)
-	// if redis isn't exist, b2b is not available
-	if err != nil {
-		a.b2bAvailable = false
-	} else {
-		a.b2bAvailable = true
-		//isPaused(0:pause,1:play)
-		tmpPlay = "0"
-		newPlay = "0"
-		redisSet("play", "0", a.con)
-		//title
-		tmpTitle = a.musicTitle
-		redisSet("title", a.musicTitle, a.con)
-		//pos
-		tmppos = "0"
-		redisSet("pos", "0", a.con)
-		//volume
-		tmpVolume := strconv.FormatFloat(a.volume.Volume, 'f', 4, 64)
-		redisSet("volume", tmpVolume, a.con)
-		//speed
-		tmpSpeed := strconv.FormatFloat(a.resampler.Ratio(), 'f', 4, 64)
-		redisSet("speed", tmpSpeed, a.con)
-	}
-
+	a.logger.Printf("Start Asynchronous function")
 	// call update each second
 	go func() {
 		for {
 			a.app.Update()
 			// aim 60fps(like fighting game)
 			time.Sleep(time.Millisecond * 16)
-			// for b2b mode
-			if a.Mode == "b2b" {
-				//isPaused
-				newPlay = redisGet("play", a.con)
-				if newPlay != tmpPlay {
-					a.PlayPause()
-					tmpPlay = newPlay
-					redisSet("play", tmpPlay, a.con)
-				}
-				//title
-				newTitle = redisGet("title", a.con)
-				if newTitle != tmpTitle {
-					a.LoadMusic(newTitle)
-					tmpTitle = newTitle
-					redisSet("title", tmpTitle, a.con)
-				}
-				//position
-				newpos = redisGet("pos", a.con)
-				if newpos != tmppos {
-					pos, _ := strconv.Atoi(newpos)
-					a.streamer.Seek(pos)
-					// reset position
-					tmppos = "0"
-					newpos = "0"
-					redisSet("pos", "0", a.con)
-				}
-				//volume
-				newVolume = redisGet("volume", a.con)
-				if newVolume != tmpVolume {
-					volume, _ := strconv.ParseFloat(newVolume, 64)
-					a.SetVol(volume)
-					tmpVolume = newVolume
-					redisSet("volume", tmpVolume, a.con)
-				}
-				//speed
-				newSpeed = redisGet("speed", a.con)
-				if newSpeed != tmpSpeed {
-					speed, _ := strconv.ParseFloat(newSpeed, 64)
-					a.SetSpd(speed)
-					tmpSpeed = newSpeed
-					redisSet("speed", tmpSpeed, a.con)
-				}
-			}
 		}
 	}()
 	a.app.Run()

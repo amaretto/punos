@@ -58,11 +58,11 @@ func (l *LoadPanel) HandleEvent(ev tcell.Event) bool {
 		// Load music
 		case 'l':
 			l.App().LoadMusic(l.selected)
-			l.App().ShowTrntbl()
+			l.App().ShowPunosPanel()
 			return true
 		// swtich other panel
 		case 'f':
-			l.App().ShowTrntbl()
+			l.App().ShowPunosPanel()
 			return true
 			// analyze all music data
 		case 'a':
@@ -72,8 +72,6 @@ func (l *LoadPanel) HandleEvent(ev tcell.Event) bool {
 	}
 	return l.Panel.HandleEvent(ev)
 }
-
-// Model items
 
 //GetCell is method for Model
 func (model *loadModel) GetCell(x, y int) (rune, tcell.Style, []rune, int) {

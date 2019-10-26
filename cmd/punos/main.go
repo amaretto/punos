@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-
 	var dlog *log.Logger
 	logfile := "hoge"
 	if logfile != "" {
