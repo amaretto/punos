@@ -261,30 +261,51 @@ func (a *App) LoadMusic(path string) {
 	speaker.Unlock()
 }
 
-// Analyze analyze musics and create waveform
-func (a *App) Analyze() {
+// AnalyzeAll analyze musics and create waveform
+func (a *App) AnalyzeAll() {
+	// ToDo : erase
+	begin := time.Now()
 	musicList := a.ListMusic()
 	r := regexp.MustCompile(`.*mp3`)
+	finished := make(chan bool)
+
 	for _, music := range musicList {
 		if !r.MatchString(music) {
 			// it isn't mp3
 			continue
 		}
-		f, err := os.Open(a.musicDirPath + "/" + music)
-		if err != nil {
-			report(err)
-		}
-		streamer, _, err := mp3.Decode(f)
-		if err != nil {
-			report(err)
-		}
-		defer streamer.Close()
-		// generate and write each wave info to waveDir
-		rwave := GenRawWave(streamer, a.wave.SampleInterval)
-		SmoothRawWave(rwave)
-		nwave := NormalizeRawWave(rwave, float64(a.wave.HeightMax), float64(a.wave.ValMax))
-		WriteWave(nwave, a.wave.WaveDirPath, music)
+		go func() {
+			a.Analyze(music)
+			finished <- true
+		}()
 	}
+
+	for i := 0; i < len(musicList); i++ {
+		<-finished
+	}
+
+	// ToDo : erase
+	end := time.Now()
+	a.logger.Printf("AnalyzeAll() takes %fs\n", (end.Sub(begin)).Seconds())
+}
+
+// Analyze analyze a music and create waveform
+func (a *App) Analyze(music string) {
+	f, err := os.Open(a.musicDirPath + "/" + music)
+	if err != nil {
+		report(err)
+	}
+	streamer, _, err := mp3.Decode(f)
+	if err != nil {
+		report(err)
+	}
+	defer streamer.Close()
+	// generate and write each wave info to waveDir
+	rwave := GenRawWave(streamer, a.wave.SampleInterval)
+	SmoothRawWave(rwave)
+	nwave := NormalizeRawWave(rwave, float64(a.wave.HeightMax), float64(a.wave.ValMax))
+	WriteWave(nwave, a.wave.WaveDirPath, music)
+	return
 }
 
 // Quit is
@@ -420,7 +441,7 @@ func NewApp() *App {
 		os.Mkdir("wave", 0755)
 	}
 	if !exists(app.wave.WaveDirPath + "/" + app.musicTitle + ".txt") {
-		app.Analyze()
+		app.AnalyzeAll()
 	}
 
 	app.wave.Wave = LoadWave(app.wave.WaveDirPath, app.musicTitle)
