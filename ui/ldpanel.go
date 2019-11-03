@@ -66,7 +66,7 @@ func (l *LoadPanel) HandleEvent(ev tcell.Event) bool {
 			return true
 			// analyze all music data
 		case 'a':
-			l.App().Analyze()
+			l.App().AnalyzeAll()
 			return true
 		}
 	}
@@ -217,15 +217,6 @@ func (l *LoadPanel) update() {
 
 	l.lines = lines
 	l.styles = styles
-
-	//	l.text.SetLines([]string{
-	//		" _ __  _   _ _ __   ___  ___",
-	//		"| '_ \\| | | | '_ \\ / _ \\/ __|",
-	//		"| |_) | |_| | | | | (_) \\__ \\",
-	//		"| .__/ \\__,_|_| |_|\\___/|___/",
-	//		"|_|",
-	//		time.Now().String(),
-	//	})
 }
 
 //NewLoadPanel return LoadPanel
@@ -234,17 +225,6 @@ func NewLoadPanel(app *App) *LoadPanel {
 	l := &LoadPanel{}
 	l.Panel.Init(app)
 	l.SetTitle("Load Music")
-
-	//l.text = views.NewTextArea()
-	//l.text.SetStyle(StyleNormal)
-	//l.text.SetLines([]string{
-	//	" _ __  _   _ _ __   ___  ___",
-	//	"| '_ \\| | | | '_ \\ / _ \\/ __|",
-	//	"| |_) | |_| | | | | (_) \\__ \\",
-	//	"| .__/ \\__,_|_| |_|\\___/|___/",
-	//	"|_|",
-	//})
-	//l.SetContent(l.text)
 
 	l.content = views.NewCellView()
 	l.content.SetModel(&loadModel{l})
