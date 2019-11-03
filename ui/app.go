@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"time"
@@ -38,6 +39,8 @@ type App struct {
 
 	// Waveform
 	wave Waveform
+	// Filter
+	filter *Filter
 
 	views.WidgetWatchers
 }
@@ -163,6 +166,20 @@ func (a *App) SetSpd(speed float64) {
 	speaker.Unlock()
 }
 
+// Cutoffup is
+func (a *App) Cutoffup() {
+	speaker.Lock()
+	a.filter.Freq += 100
+	speaker.Unlock()
+}
+
+// Cutoffdown is
+func (a *App) Cutoffdown() {
+	speaker.Lock()
+	a.filter.Freq -= 100
+	speaker.Unlock()
+}
+
 // Status return music status
 func (a *App) Status() (map[string]string, []string) {
 	// gather current information
@@ -171,6 +188,7 @@ func (a *App) Status() (map[string]string, []string) {
 	len := a.streamer.Len()
 	volume := a.volume.Volume
 	speed := a.resampler.Ratio()
+	cutoff := a.filter.Freq
 	speaker.Unlock()
 
 	position := a.sampleRate.D(pos)
@@ -183,7 +201,7 @@ func (a *App) Status() (map[string]string, []string) {
 	// ToDo : building string set should move panel
 	status["title"] = fmt.Sprintf("[Title : %s]", a.musicTitle)
 	status["position"] = fmt.Sprintf("[Position : %s %v / %v]", GetProgressbar(a.wave.WindowSize/2, pos, len), position.Round(time.Second), length.Round(time.Second))
-	status["info"] = fmt.Sprintf("[Mode\t: Normal]   [Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]", cue.Round(time.Second), volume, speed)
+	status["info"] = fmt.Sprintf("[Mode\t: Normal]   [Cue Point: %v]   [Volume\t: %.1f]   [Speed\t: %.3f]   [Cutoff\t: %1f]", cue.Round(time.Second), volume, speed, cutoff)
 	status["volume"] = fmt.Sprintf("Volume\t: %.1f", volume)
 	status["speed"] = fmt.Sprintf("Speed\t: %.3f", speed)
 	return status, a.wave.GetWaveStr(pos)
@@ -413,9 +431,16 @@ func NewApp() *App {
 	app.ctrl = &beep.Ctrl{Streamer: beep.Loop(-1, app.streamer)}
 	app.resampler = beep.ResampleRatio(4, 1, app.ctrl)
 	app.volume = &effects.Volume{Streamer: app.resampler, Base: 2}
+	// ToDo: Filter Test
+	q := 1 / math.Sqrt(2)
+	//q := float64(3)
+	app.filter = &Filter{Streamer: app.volume, Sampling: 44100, Freq: 1000, Q: q, Type: 0}
 
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
 	speaker.Play(app.volume)
+	// ToDo: Filter Test
+	//speaker.Play(app.filter)
+
 	// first, pause music
 	speaker.Lock()
 	app.ctrl.Paused = !app.ctrl.Paused
