@@ -65,6 +65,11 @@ func (p *PunosPanel) HandleEvent(ev tcell.Event) bool {
 		case 'x':
 			p.App().Spdup()
 			return true
+		// change cutoff frequency
+		case '[':
+			p.App().Cutoffdown()
+		case ']':
+			p.App().Cutoffup()
 		// switch other panel
 		case 'f':
 			p.App().ShowLdpanel()
