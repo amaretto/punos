@@ -16,13 +16,14 @@ func main() {
 	flag.BoolVar(&showVersion, "v", false, "show version")
 	flag.BoolVar(&showVersion, "version", false, "show version")
 	flag.Parse()
+
 	if showVersion {
 		fmt.Println("version:", version)
 		return
 	}
 
 	var dlog *log.Logger
-	logfile := "hoge"
+	logfile := "punos.log"
 	if logfile != "" {
 		f, e := os.Create(logfile)
 		if e == nil {
