@@ -396,6 +396,7 @@ func (a *App) GetAppName() string {
 
 // NewApp generate new applicaiton
 func NewApp() *App {
+	fmt.Println("aaa")
 	app := &App{}
 	app.app = &views.Application{}
 	app.ppanel = NewPunosPanel(app)
@@ -409,16 +410,18 @@ func NewApp() *App {
 
 	//music
 	//ToDo : Set Default Music
-	// if there are no music in "mp3" directory,show "please insert at leaset one audio file into "mp3" directory"
 	list := app.ListMusic()
 	app.musicDirPath = "mp3"
-	//ToDO : fix it
+	fmt.Println(list)
+
 	if len(list) == 0 {
-		fmt.Println("Please insert at lease one audio file into \"mp3\" diretctory")
+		fmt.Println("Please insert at least one audio file into \"mp3\" diretctory")
 		panic("error")
 	}
+
 	app.musicTitle = list[0]
-	//app.musicTitle = "03.mp3"
+	fmt.Println(app.musicTitle)
+
 	f, err := os.Open(app.musicDirPath + "/" + app.musicTitle)
 	if err != nil {
 		report(err)
@@ -493,7 +496,6 @@ func (a *App) Run() {
 func exists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
-
 }
 
 func report(err error) {
