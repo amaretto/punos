@@ -3,7 +3,8 @@ package punos
 import (
 	"fmt"
 
-	//"github.com/amaretto/punos/pkg/punos"
+	"github.com/amaretto/punos/pkg/cmd/cli/controller"
+	"github.com/amaretto/punos/pkg/cmd/cli/server"
 	"github.com/amaretto/punos/pkg/cmd/cli/turntable"
 	"github.com/spf13/cobra"
 )
@@ -32,6 +33,14 @@ func NewCommand() *cobra.Command {
 
 	c.AddCommand(
 		turntable.NewCommand(),
+	)
+
+	c.AddCommand(
+		server.NewCommand(),
+	)
+
+	c.AddCommand(
+		controller.NewCommand(),
 	)
 
 	return c
