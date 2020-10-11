@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/amaretto/punos/pkg/cmd/cli/controller"
+	"github.com/amaretto/punos/pkg/cmd/cli/player"
 	"github.com/amaretto/punos/pkg/cmd/cli/server"
-	"github.com/amaretto/punos/pkg/cmd/cli/turntable"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	c.AddCommand(
-		turntable.NewCommand(),
+		player.NewCommand(),
 	)
 
 	c.AddCommand(
