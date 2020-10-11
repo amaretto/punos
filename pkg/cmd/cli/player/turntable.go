@@ -4,26 +4,37 @@ import (
 	"unicode"
 
 	"github.com/gdamore/tcell"
+	"github.com/rivo/tview"
 )
 
 // Turntable give some functions of music player
 type Turntable struct {
+	// Use Panel?
 	Panel
+	*tview.Flex
+
+	// CHANGE IT
+	djID         tview.TextView
+	musicTitle   tview.TextView
+	progressBar  tview.TextView
+	waveformBox  tview.TextView
+	playPauseBox tview.TextView
+	meterBox     tview.Flex
 }
 
 // HandleEvent handles key event of Turntable
-func (p *Turntable) HandleEvent(ev tcell.Event) bool {
+func (t *Turntable) HandleEvent(ev tcell.Event) bool {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
 		case tcell.KeyEsc:
-			p.App().Stop()
+			t.App().Stop()
 			return true
 		}
 
 		switch unicode.ToLower(ev.Rune()) {
 		case ' ':
-			p.App().Stop()
+			t.App().Stop()
 			return true
 		}
 	}
