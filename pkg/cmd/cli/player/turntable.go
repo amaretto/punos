@@ -1,4 +1,4 @@
-package turntable
+package player
 
 import (
 	"unicode"
@@ -6,13 +6,13 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-// PlayPanel give some functions of music player
-type PlayPanel struct {
+// Turntable give some functions of music player
+type Turntable struct {
 	Panel
 }
 
-// HandleEvent handles key event
-func (p *PlayPanel) HandleEvent(ev tcell.Event) bool {
+// HandleEvent handles key event of Turntable
+func (p *Turntable) HandleEvent(ev tcell.Event) bool {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
@@ -26,7 +26,10 @@ func (p *PlayPanel) HandleEvent(ev tcell.Event) bool {
 			p.App().Stop()
 			return true
 		}
-
 	}
 	return true
+}
+
+func (t *Turntable) update() {
+	// get music info from app and display it
 }

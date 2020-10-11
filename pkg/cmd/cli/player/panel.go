@@ -1,4 +1,4 @@
-package turntable
+package player
 
 import (
 	"sync"
@@ -21,7 +21,7 @@ func (p *Panel) Init(app *App) {
 	})
 }
 
-// App return pointer of the Appapp
+// App return pointer of the App
 func (p *Panel) App() *App {
 	return p.app
 }

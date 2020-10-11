@@ -1,11 +1,10 @@
-package turntable
+package player
 
 import (
 	"fmt"
 	"strconv"
 	"time"
 
-	//"github.com/amaretto/punos/pkg/punos"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 
@@ -15,10 +14,12 @@ import (
 // NewCommand create command
 func NewCommand() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "turntable",
-		Short: "start turntable",
-		Long:  `start turntable`,
+		Use:   "player",
+		Short: "start player",
+		Long:  `start player`,
 		Run: func(cmd *cobra.Command, args []string) {
+			// app := NewApp()
+			// app.Start()
 			fmt.Println("fuga")
 			callBox()
 		},
