@@ -9,8 +9,7 @@ import (
 
 // Turntable give some functions of music player
 type Turntable struct {
-	// Use Panel?
-	Panel
+	app *App
 	*tview.Flex
 
 	// CHANGE IT
@@ -22,19 +21,27 @@ type Turntable struct {
 	meterBox     tview.Flex
 }
 
+func newTurntable(app *App) *Turntable {
+	t := &Turntable{
+		app:  app,
+		Flex: tview.NewFlex(),
+	}
+	return t
+}
+
 // HandleEvent handles key event of Turntable
 func (t *Turntable) HandleEvent(ev tcell.Event) bool {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
 		case tcell.KeyEsc:
-			t.App().Stop()
+			t.app.Stop()
 			return true
 		}
 
 		switch unicode.ToLower(ev.Rune()) {
 		case ' ':
-			t.App().Stop()
+			t.app.Stop()
 			return true
 		}
 	}
