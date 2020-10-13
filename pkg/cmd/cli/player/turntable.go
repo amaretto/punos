@@ -13,18 +13,39 @@ type Turntable struct {
 	*tview.Flex
 
 	// CHANGE IT
-	djID         tview.TextView
-	musicTitle   tview.TextView
-	progressBar  tview.TextView
-	waveformBox  tview.TextView
-	playPauseBox tview.TextView
+	djID         *DefaultView
+	turntableID  *DefaultView
+	musicTitle   *DefaultView
+	progressBar  *DefaultView
+	waveformBox  *DefaultView
+	playPauseBox *DefaultView
 	meterBox     tview.Flex
+}
+
+type DefaultView struct {
+	*tview.TextView
+}
+
+func NewDefaultView(title string) *DefaultView {
+	d := &DefaultView{
+		TextView: tview.NewTextView(),
+	}
+	d.TextView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle(title)
+	d.TextView.SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
+	return d
 }
 
 func newTurntable(app *App) *Turntable {
 	t := &Turntable{
 		app:  app,
 		Flex: tview.NewFlex(),
+
+		turntableID:  NewDefaultView("TurnTable"),
+		musicTitle:   NewDefaultView("Music"),
+		progressBar:  NewDefaultView("Progress"),
+		waveformBox:  NewDefaultView("Waveform"),
+		playPauseBox: NewDefaultView("Play/Pause"),
+		meterBox:     tview.NewFlex(),
 	}
 	return t
 }
