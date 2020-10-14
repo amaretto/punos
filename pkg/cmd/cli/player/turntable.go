@@ -19,7 +19,7 @@ type Turntable struct {
 	progressBar  *DefaultView
 	waveformBox  *DefaultView
 	playPauseBox *DefaultView
-	meterBox     tview.Flex
+	meterBox     *tview.Flex
 }
 
 type DefaultView struct {
@@ -40,6 +40,7 @@ func newTurntable(app *App) *Turntable {
 		app:  app,
 		Flex: tview.NewFlex(),
 
+		djID:         NewDefaultView("DJ"),
 		turntableID:  NewDefaultView("TurnTable"),
 		musicTitle:   NewDefaultView("Music"),
 		progressBar:  NewDefaultView("Progress"),
@@ -47,6 +48,18 @@ func newTurntable(app *App) *Turntable {
 		playPauseBox: NewDefaultView("Play/Pause"),
 		meterBox:     tview.NewFlex(),
 	}
+
+	t.SetDirection(tview.FlexRow).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+			AddItem(t.turntableID, 0, 2, false).
+			AddItem(t.djID, 0, 2, false).
+			AddItem(t.musicTitle, 0, 3, false), 0, 1, false).
+		AddItem(t.progressBar, 0, 1, false).
+		AddItem(t.waveformBox, 0, 6, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+			AddItem(t.playPauseBox, 0, 3, false).
+			AddItem(t.meterBox, 0, 7, false), 0, 4, false)
+
 	return t
 }
 
