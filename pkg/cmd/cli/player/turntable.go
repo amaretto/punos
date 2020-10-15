@@ -22,10 +22,12 @@ type Turntable struct {
 	meterBox     *tview.Flex
 }
 
+// DefaultView is
 type DefaultView struct {
 	*tview.TextView
 }
 
+// NewDefaultView is
 func NewDefaultView(title string) *DefaultView {
 	d := &DefaultView{
 		TextView: tview.NewTextView(),
@@ -60,7 +62,17 @@ func newTurntable(app *App) *Turntable {
 			AddItem(t.playPauseBox, 0, 3, false).
 			AddItem(t.meterBox, 0, 7, false), 0, 4, false)
 
+	t.setKeyHandler()
 	return t
+}
+func (t *Turntable) setKeyHandler() {
+	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
+		switch e.Key() {
+		case tcell.KeyESC:
+			t.app.Stop()
+		}
+		return e
+	})
 }
 
 // HandleEvent handles key event of Turntable
