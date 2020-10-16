@@ -1,7 +1,7 @@
 package player
 
 import (
-	"unicode"
+	"fmt"
 
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
@@ -65,11 +65,18 @@ func newTurntable(app *App) *Turntable {
 	t.setKeyHandler()
 	return t
 }
+
 func (t *Turntable) setKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Key() {
 		case tcell.KeyESC:
 			t.app.Stop()
+		}
+
+		switch e.Rune() {
+		case 'n':
+			fmt.Println("hoge")
+			t.app.pages.SwitchToPage("selector")
 		}
 		return e
 	})
@@ -81,12 +88,6 @@ func (t *Turntable) HandleEvent(ev tcell.Event) bool {
 	case *tcell.EventKey:
 		switch ev.Key() {
 		case tcell.KeyEsc:
-			t.app.Stop()
-			return true
-		}
-
-		switch unicode.ToLower(ev.Rune()) {
-		case ' ':
 			t.app.Stop()
 			return true
 		}
