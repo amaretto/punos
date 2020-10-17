@@ -1,8 +1,6 @@
 package player
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
@@ -75,24 +73,10 @@ func (t *Turntable) setKeyHandler() {
 
 		switch e.Rune() {
 		case 'n':
-			fmt.Println("hoge")
 			t.app.pages.SwitchToPage("selector")
 		}
 		return e
 	})
-}
-
-// HandleEvent handles key event of Turntable
-func (t *Turntable) HandleEvent(ev tcell.Event) bool {
-	switch ev := ev.(type) {
-	case *tcell.EventKey:
-		switch ev.Key() {
-		case tcell.KeyEsc:
-			t.app.Stop()
-			return true
-		}
-	}
-	return true
 }
 
 func (t *Turntable) update() {
