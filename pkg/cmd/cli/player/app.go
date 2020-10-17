@@ -32,7 +32,7 @@ func New() *App {
 	a.pages.SwitchToPage("turntable")
 
 	a.s = newSelector(a)
-	a.pages.AddPage("selector", a.s, true, true)
+	a.pages.AddPage("selector", a.s, true, false)
 
 	return a
 }
