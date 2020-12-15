@@ -73,6 +73,7 @@ func (t *Turntable) setKeyHandler() {
 
 		switch e.Rune() {
 		case 'n':
+			//fmt.Println("hoge")
 			t.app.pages.SwitchToPage("selector")
 		}
 		return e
