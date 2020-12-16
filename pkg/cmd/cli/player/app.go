@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
@@ -54,6 +55,16 @@ func (a *App) Start() {
 // Stop stop the application
 func (a *App) Stop() {
 	a.app.Stop()
+}
+
+func (a *App) SetGlobalKeyBinding(event *tcell.EventKey) {
+	//a.setGlobalKeyBinding(event)
+	switch event.Rune() {
+	case 'n':
+		a.pages.SwitchToPage("selector")
+	case 'f':
+		a.pages.SwitchToPage("turntable")
+	}
 }
 
 //	waveformString := `
