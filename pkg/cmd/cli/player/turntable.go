@@ -1,6 +1,8 @@
 package player
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
@@ -66,15 +68,15 @@ func newTurntable(app *App) *Turntable {
 
 func (t *Turntable) setKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
+		t.app.SetGlobalKeyBinding(e)
 		switch e.Key() {
 		case tcell.KeyESC:
 			t.app.Stop()
 		}
 
 		switch e.Rune() {
-		case 'n':
-			//fmt.Println("hoge")
-			t.app.pages.SwitchToPage("selector")
+		case 'a':
+			fmt.Println("hoge")
 		}
 		return e
 	})
