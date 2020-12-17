@@ -1,9 +1,6 @@
 package player
 
 import (
-	"fmt"
-
-	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 )
 
@@ -34,22 +31,21 @@ func newSelector(app *App) *Selector {
 			AddItem(s.djID, 0, 2, false).
 			AddItem(s.musicTitle, 0, 3, false), 0, 1, false)
 
-	s.setKeyHandler()
 	return s
 }
 
-func (s *Selector) setKeyHandler() {
-	s.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
-		s.app.SetGlobalKeyBinding(e)
-		switch e.Key() {
-		case tcell.KeyESC:
-			s.app.Stop()
-		}
-
-		switch e.Rune() {
-		case 'b':
-			fmt.Println("fuag")
-		}
-		return e
-	})
-}
+//func (s *Selector) setKeyHandler() {
+//	s.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
+//		s.app.SetGlobalKeyBinding(e)
+//		switch e.Key() {
+//		case tcell.KeyESC:
+//			s.app.Stop()
+//		}
+//
+//		switch e.Rune() {
+//		case 'b':
+//			fmt.Println("fuag")
+//		}
+//		return e
+//	})
+//}
