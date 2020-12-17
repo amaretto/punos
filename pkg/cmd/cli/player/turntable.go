@@ -76,7 +76,7 @@ func (t *Turntable) setKeyHandler() {
 
 		switch e.Rune() {
 		case 'a':
-			fmt.Println("hoge")
+			fmt.Println(t.HasFocus())
 		}
 		return e
 	})

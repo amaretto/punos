@@ -58,7 +58,6 @@ func (a *App) Stop() {
 }
 
 func (a *App) SetGlobalKeyBinding(event *tcell.EventKey) {
-	//a.setGlobalKeyBinding(event)
 	switch event.Rune() {
 	case 'n':
 		a.pages.SwitchToPage("selector")
