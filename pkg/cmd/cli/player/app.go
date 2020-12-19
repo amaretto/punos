@@ -61,21 +61,13 @@ func (a *App) SetGlobalKeyBinding(event *tcell.EventKey) {
 	switch event.Rune() {
 	case 'n':
 		a.pages.SwitchToPage("selector")
+		a.app.SetFocus(a.s)
 	case 'f':
 		a.pages.SwitchToPage("turntable")
+		a.app.SetFocus(a.t)
 	}
 }
 
-//	waveformString := `
-//________   ___  ___   ________    ________   ________
-//|\   __ \ |\  \|\  \ |\   ___  \ |\   __  \ |\   ____\
-//\ \  \|\ \ \ \  \\  \\ \  \\ \  \\ \  \|\  \\ \  \___|_
-// \ \   ___\ \ \  \\  \\ \  \\ \  \\ \  \\\  \\ \_____  \
-//  \ \  \___| \ \  \\  \\ \  \\ \  \\ \  \\\  \\|____|\  \
-//   \ \__\     \ \_______\\\__\\ \__\\ \_______\ ____\_\  \
-//    \|__|      \|_______| \|__| \|__| \|_______||\________\
-//                                                \|________|
-//`
 //	meterBox := tview.NewFlex()
 //	meterBox.SetDirection(tview.FlexColumn).SetBorder(true).SetTitle("Meters").SetTitleAlign(tview.AlignLeft)
 //	volumeMeter := tview.NewTextView().SetText("┌─────┐\n│     │\n│     │\n│     │\n│     │\n│─025─│\n│─────│\n│─────│\n│─────│\n└─────┘\nspeed").SetTextAlign(tview.AlignCenter)
