@@ -13,11 +13,11 @@ type Turntable struct {
 	*tview.Flex
 
 	// CHANGE IT
-	djID         *DefaultView
+	djName       *DefaultView
 	turntableID  *DefaultView
 	musicTitle   *DefaultView
 	progressBar  *DefaultView
-	waveformBox  *DefaultView
+	waveformPanel  *WaveformPanel
 	playPauseBox *DefaultView
 	meterBox     *tview.Flex
 }
@@ -42,11 +42,11 @@ func newTurntable(app *App) *Turntable {
 		app:  app,
 		Flex: tview.NewFlex(),
 
-		djID:         NewDefaultView("DJ"),
+		djName:       NewDefaultView("DJ"),
 		turntableID:  NewDefaultView("TurnTable"),
 		musicTitle:   NewDefaultView("Music"),
 		progressBar:  NewDefaultView("Progress"),
-		waveformBox:  NewDefaultView("Waveform"),
+		waveformPanel:  NewWaveformPanel(),
 		playPauseBox: NewDefaultView("Play/Pause"),
 		meterBox:     tview.NewFlex(),
 	}
@@ -54,19 +54,26 @@ func newTurntable(app *App) *Turntable {
 	t.SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(t.turntableID, 0, 2, false).
-			AddItem(t.djID, 0, 2, false).
+			AddItem(t.djName, 0, 2, false).
 			AddItem(t.musicTitle, 0, 3, false), 0, 1, false).
 		AddItem(t.progressBar, 0, 1, false).
-		AddItem(t.waveformBox, 0, 6, false).
+		AddItem(t.waveformPanel, 0, 6, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(t.playPauseBox, 0, 3, false).
 			AddItem(t.meterBox, 0, 7, false), 0, 4, false)
 
-	t.setKeyHandler()
+	t.initTurntable()
+	t.SetKeyHandler()
 	return t
 }
 
-func (t *Turntable) setKeyHandler() {
+func (t *Turntable) initTurntable() {
+	// ToDo: set dj name and turntable from configuration or arguments
+	t.djName.SetText("anonymous")
+	t.turntableID.SetText("TurnTable")
+}
+
+func (t *Turntable) SetKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		t.app.SetGlobalKeyBinding(e)
 		switch e.Key() {
