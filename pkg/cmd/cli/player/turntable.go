@@ -13,28 +13,13 @@ type Turntable struct {
 	*tview.Flex
 
 	// CHANGE IT
-	djName       *DefaultView
-	turntableID  *DefaultView
-	musicTitle   *DefaultView
-	progressBar  *DefaultView
-	waveformPanel  *WaveformPanel
-	playPauseBox *DefaultView
-	meterBox     *tview.Flex
-}
-
-// DefaultView is
-type DefaultView struct {
-	*tview.TextView
-}
-
-// NewDefaultView is
-func NewDefaultView(title string) *DefaultView {
-	d := &DefaultView{
-		TextView: tview.NewTextView(),
-	}
-	d.TextView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle(title)
-	d.TextView.SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-	return d
+	djName        *DefaultView
+	turntableID   *DefaultView
+	musicTitle    *DefaultView
+	progressBar   *ProgressBar
+	waveformPanel *WaveformPanel
+	playPauseBox  *PlayPausePanel
+	meterBox      *MeterBox
 }
 
 func newTurntable(app *App) *Turntable {
@@ -42,13 +27,13 @@ func newTurntable(app *App) *Turntable {
 		app:  app,
 		Flex: tview.NewFlex(),
 
-		djName:       NewDefaultView("DJ"),
-		turntableID:  NewDefaultView("TurnTable"),
-		musicTitle:   NewDefaultView("Music"),
-		progressBar:  NewDefaultView("Progress"),
-		waveformPanel:  NewWaveformPanel(),
-		playPauseBox: NewDefaultView("Play/Pause"),
-		meterBox:     tview.NewFlex(),
+		djName:        NewDefaultView("DJ"),
+		turntableID:   NewDefaultView("TurnTable"),
+		musicTitle:    NewDefaultView("Music"),
+		progressBar:   NewProgressBar(),
+		waveformPanel: NewWaveformPanel(),
+		playPauseBox:  NewPlayPausePanel(),
+		meterBox:      NewMeterBox(),
 	}
 
 	t.SetDirection(tview.FlexRow).
@@ -64,6 +49,9 @@ func newTurntable(app *App) *Turntable {
 
 	t.initTurntable()
 	t.SetKeyHandler()
+
+	// kick update()
+
 	return t
 }
 
@@ -76,10 +64,6 @@ func (t *Turntable) initTurntable() {
 func (t *Turntable) SetKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		t.app.SetGlobalKeyBinding(e)
-		switch e.Key() {
-		case tcell.KeyESC:
-			t.app.Stop()
-		}
 
 		switch e.Rune() {
 		case 'a':
@@ -90,5 +74,10 @@ func (t *Turntable) SetKeyHandler() {
 }
 
 func (t *Turntable) update() {
-	// get music info from app and display it
+	// ToDo: get music info from app
+	// ToDo: update music title
+	// ToDo: update progress bar
+	// ToDo: update Waveform
+	// ToDo: update PlayPause
+	// ToDo: update Meters
 }
