@@ -58,6 +58,11 @@ func (a *App) Stop() {
 }
 
 func (a *App) SetGlobalKeyBinding(event *tcell.EventKey) {
+	switch event.Key() {
+	case tcell.KeyESC:
+		a.Stop()
+	}
+
 	switch event.Rune() {
 	case 'n':
 		a.pages.SwitchToPage("selector")
@@ -67,39 +72,3 @@ func (a *App) SetGlobalKeyBinding(event *tcell.EventKey) {
 		a.app.SetFocus(a.t)
 	}
 }
-
-//	meterBox := tview.NewFlex()
-//	meterBox.SetDirection(tview.FlexColumn).SetBorder(true).SetTitle("Meters").SetTitleAlign(tview.AlignLeft)
-//	volumeMeter := tview.NewTextView().SetText("┌─────┐\n│     │\n│     │\n│     │\n│     │\n│─025─│\n│─────│\n│─────│\n│─────│\n└─────┘\nspeed").SetTextAlign(tview.AlignCenter)
-//	volumeMeter2 := tview.NewTextView().SetText("┌─────┐\n│     │\n│     │\n│     │\n│     │\n│-010-│\n│     │\n│     │\n│─────│\n└─────┘\nvolume").SetTextAlign(tview.AlignCenter)
-//	volumeMeter3 := tview.NewTextView().SetText("┌─────┐\n│     │\n│     │\n│     │\n│─────│\n│─120-│\n│─────│\n│─────│\n│─────│\n└─────┘\nbpm").SetTextAlign(tview.AlignCenter)
-//	volumeMeter4 := tview.NewTextView().SetText("┌─────┐\n│     │\n│─────│\n│─────│\n│─────│\n│─080─│\n│─────│\n│─────│\n│─────│\n└─────┘\nfilter").SetTextAlign(tview.AlignCenter)
-//	meterBox.AddItem(volumeMeter, 0, 1, false).AddItem(volumeMeter2, 0, 1, false).AddItem(volumeMeter3, 0, 1, false).AddItem(volumeMeter4, 0, 1, false)
-//
-//	//meterBox := tview.NewBox().SetBorder(true).SetTitle("Meters").SetTitleAlign(tview.AlignLeft)
-//
-//
-//	dummyPage := tview.NewTextView()
-//	dummyPage.SetText("hogehogehoge").SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-//
-//	pages := tview.NewPages()
-//	pages.AddPage("ttpanel", flex, true, true)
-//	pages.AddPage("dummyPage", dummyPage, true, false)
-//
-//	pages.SwitchToPage("ttpanel")
-//	go func() {
-//		for {
-//			time.Sleep(1 * time.Millisecond)
-//			musicTitle.SetText(strconv.FormatInt(time.Now().UnixNano(), 10))
-//			app.Draw()
-//			//pages.SwitchToPage("ttpanel")
-//			//time.Sleep(1 * time.Second)
-//			//pages.SwitchToPage("dummyPage")
-//		}
-//	}()
-//
-//	if err := app.SetRoot(pages, true).Run(); err != nil {
-//		panic(err)
-//	}
-//
-//}
