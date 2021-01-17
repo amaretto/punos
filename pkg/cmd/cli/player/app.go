@@ -1,10 +1,16 @@
 package player
 
 import (
+	"fmt"
+	"os"
 	"strconv"
 	"time"
 
-	"github.com/gdamore/tcell"
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/effects"
+	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -19,6 +25,13 @@ type App struct {
 	musicTitle string
 	musicPath  string
 	isPlay     bool
+
+	// Music
+	streamer   beep.StreamSeeker
+	ctrl       *beep.Ctrl
+	sampleRate beep.SampleRate
+	resampler  *beep.Resampler
+	volume     *effects.Volume
 }
 
 // New return App instance
@@ -40,6 +53,7 @@ func New() *App {
 
 // Start kick the application
 func (a *App) Start() {
+	a.LoadMusic("test")
 	go func() {
 		for {
 			time.Sleep(1 * time.Millisecond)
@@ -71,4 +85,45 @@ func (a *App) SetGlobalKeyBinding(event *tcell.EventKey) {
 		a.pages.SwitchToPage("turntable")
 		a.app.SetFocus(a.t)
 	}
+}
+
+func (a *App) LoadMusic(path string) {
+	//speaker.Lock()
+	//a.ctrl.Paused = true
+	//speaker.Unlock()
+	//a.streamer.Close()
+
+	f, err := os.Open("mp3/test.mp3")
+	if err != nil {
+		report(err)
+	}
+	// update title
+	a.musicTitle = path
+
+	//var format beep.Format
+	streamer, format, err := mp3.Decode(f)
+	if err != nil {
+		report(err)
+	}
+	// ToDo close streamer when music is switched
+
+	//	a.wave.Wave = LoadWave(a.wave.WaveDirPath, a.musicTitle)
+	//	a.wave.NormalizeWave()
+	a.sampleRate = format.SampleRate
+	a.streamer = streamer
+	a.ctrl = &beep.Ctrl{Streamer: beep.Loop(-1, a.streamer)}
+	a.resampler = beep.ResampleRatio(4, 1, a.ctrl)
+	a.volume = &effects.Volume{Streamer: a.resampler, Base: 2}
+
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
+	speaker.Play(a.volume)
+
+	//speaker.Lock()
+	//a.ctrl.Paused = !a.ctrl.Paused
+	//speaker.Unlock()
+}
+
+func report(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
 }
