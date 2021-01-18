@@ -48,6 +48,23 @@ func New() *App {
 	a.s = newSelector(a)
 	a.pages.AddPage("selector", a.s, true, false)
 
+	a.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyESC:
+			a.Stop()
+		}
+
+		switch event.Rune() {
+		case 'n':
+			a.pages.SwitchToPage("selector")
+			a.app.SetFocus(a.s)
+		case 'f':
+			a.pages.SwitchToPage("turntable")
+			a.app.SetFocus(a.t)
+		}
+		return event
+	})
+
 	return a
 }
 
