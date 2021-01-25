@@ -9,8 +9,8 @@ import (
 
 // Selector is panel for selecting music
 type Selector struct {
-	app *App
 	*tview.Flex
+	app *App
 
 	djID        *DefaultView
 	turntableID *DefaultView
@@ -40,12 +40,6 @@ func newSelector(app *App) *Selector {
 
 func (s *Selector) SetKeyHandler() {
 	s.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
-		s.app.SetGlobalKeyBinding(e)
-		switch e.Key() {
-		case tcell.KeyESC:
-			s.app.Stop()
-		}
-
 		switch e.Rune() {
 		case 'b':
 			fmt.Println("fuag")

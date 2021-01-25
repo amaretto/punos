@@ -1,18 +1,15 @@
 package player
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 // Turntable give some functions of music player
 type Turntable struct {
-	app *App
 	*tview.Flex
+	app *App
 
-	// CHANGE IT
 	djName        *DefaultView
 	turntableID   *DefaultView
 	musicTitle    *DefaultView
@@ -48,7 +45,6 @@ func newTurntable(app *App) *Turntable {
 			AddItem(t.meterBox, 0, 7, false), 0, 4, false)
 
 	t.initTurntable()
-	t.SetKeyHandler()
 
 	// kick update()
 
@@ -59,16 +55,17 @@ func (t *Turntable) initTurntable() {
 	// ToDo: set dj name and turntable from configuration or arguments
 	t.djName.SetText("anonymous")
 	t.turntableID.SetText("TurnTable")
+	t.SetKeyHandler()
 }
 
 func (t *Turntable) SetKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
-		t.app.SetGlobalKeyBinding(e)
-
 		switch e.Rune() {
 		case 'a':
-			fmt.Println(t.HasFocus())
+			//fmt.Println("hogehoge")
+			t.app.musicTitle = "fuga"
 		}
+		//		fmt.Println(e.Rune())
 		return e
 	})
 }
