@@ -3,7 +3,6 @@ package player
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/faiface/beep"
@@ -48,33 +47,50 @@ func New() *App {
 	a.s = newSelector(a)
 	a.pages.AddPage("selector", a.s, true, false)
 
+	a.setAppGlobalKeyBinding()
+	// need to set focus to Primitive in Flex(HasFocus)
+	a.app.SetFocus(a.t.waveformPanel)
+
+	return a
+}
+
+func (a *App) setAppGlobalKeyBinding() {
 	a.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		// call turntable key handler
+		if a.t.HasFocus() {
+			a.t.GetInputCapture()(event)
+		}
+		// call selector key handler
+		if a.s.HasFocus() {
+			a.s.GetInputCapture()(event)
+		}
+		// global key binding
 		switch event.Key() {
 		case tcell.KeyESC:
 			a.Stop()
 		}
-
 		switch event.Rune() {
 		case 'n':
 			a.pages.SwitchToPage("selector")
 			a.app.SetFocus(a.s)
 		case 'f':
 			a.pages.SwitchToPage("turntable")
-			a.app.SetFocus(a.t)
+			a.app.SetFocus(a.t.waveformPanel)
 		}
+
 		return event
 	})
-
-	return a
 }
 
 // Start kick the application
 func (a *App) Start() {
-	a.LoadMusic("test")
+	//a.LoadMusic("test")
 	go func() {
 		for {
 			time.Sleep(1 * time.Millisecond)
-			a.t.musicTitle.SetText(strconv.FormatInt(time.Now().UnixNano(), 10))
+			//a.t.musicTitle.SetText(strconv.FormatInt(time.Now().UnixNano(), 10))
+			a.t.musicTitle.SetText(a.musicTitle)
 			a.app.Draw()
 		}
 	}()
@@ -86,22 +102,6 @@ func (a *App) Start() {
 // Stop stop the application
 func (a *App) Stop() {
 	a.app.Stop()
-}
-
-func (a *App) SetGlobalKeyBinding(event *tcell.EventKey) {
-	switch event.Key() {
-	case tcell.KeyESC:
-		a.Stop()
-	}
-
-	switch event.Rune() {
-	case 'n':
-		a.pages.SwitchToPage("selector")
-		a.app.SetFocus(a.s)
-	case 'f':
-		a.pages.SwitchToPage("turntable")
-		a.app.SetFocus(a.t)
-	}
 }
 
 func (a *App) LoadMusic(path string) {
