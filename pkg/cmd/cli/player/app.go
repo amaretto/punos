@@ -71,6 +71,10 @@ func (a *App) setAppGlobalKeyBinding() {
 			a.Stop()
 		}
 		switch event.Rune() {
+		case ' ':
+			speaker.Lock()
+			a.ctrl.Paused = !a.ctrl.Paused
+			speaker.Unlock()
 		case 'n':
 			a.pages.SwitchToPage("selector")
 			a.app.SetFocus(a.s)
@@ -85,13 +89,14 @@ func (a *App) setAppGlobalKeyBinding() {
 
 // Start kick the application
 func (a *App) Start() {
-	//a.LoadMusic("test")
+	a.LoadMusic("test")
 	go func() {
 		for {
 			time.Sleep(1 * time.Millisecond)
 			//a.t.musicTitle.SetText(strconv.FormatInt(time.Now().UnixNano(), 10))
 			a.t.musicTitle.SetText(a.musicTitle)
 			a.app.Draw()
+			a.t.progressBar.update(a.streamer.Position(), a.streamer.Len())
 		}
 	}()
 	if err := a.app.SetRoot(a.pages, true).Run(); err != nil {
