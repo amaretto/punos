@@ -1,7 +1,9 @@
 package player
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -25,12 +27,15 @@ type App struct {
 	musicPath  string
 	isPlay     bool
 
-	// Music
+	// music
 	streamer   beep.StreamSeeker
 	ctrl       *beep.Ctrl
 	sampleRate beep.SampleRate
 	resampler  *beep.Resampler
 	volume     *effects.Volume
+
+	// waveform
+	wf []int
 }
 
 // New return App instance
@@ -143,6 +148,23 @@ func (a *App) LoadMusic(path string) {
 	//speaker.Lock()
 	//a.ctrl.Paused = !a.ctrl.Paused
 	//speaker.Unlock()
+}
+
+func loadWaveform(title string) {
+	dbPath := "mp3/test.db"
+
+	// ToDo: Implement error handling
+	con, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	cmd := "SELECT wave FROM waveform WHERE title = ?"
+
+	_, err = con.Exec(cmd, title)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func report(err error) {
