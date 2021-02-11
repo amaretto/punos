@@ -1,9 +1,6 @@
 package player
 
 import (
-	"database/sql"
-	"log"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -37,22 +34,4 @@ func NewWaveformPanel() *WaveformPanel {
 
 func (w *WaveformPanel) initWaveformPanel() {
 	w.SetText(logo)
-}
-
-func (w *WaveformPanel) loadWaveform(title string) {
-	dbPath := "mp3/test.db"
-
-	// ToDo: Implement error handling
-	con, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	cmd := "SELECT wave FROM waveform WHERE title = ?"
-
-	_, err = con.Exec(cmd, title)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 }
