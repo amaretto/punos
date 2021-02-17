@@ -263,8 +263,6 @@ func (a *App) LoadMusic(path string) {
 
 // AnalyzeAll analyze musics and create waveform
 func (a *App) AnalyzeAll() {
-	// ToDo : erase
-	//begin := time.Now()
 	musicList := a.ListMusic()
 	r := regexp.MustCompile(`.*mp3`)
 	finished := make(chan bool)
