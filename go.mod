@@ -10,6 +10,7 @@ require (
 	github.com/hajimehoshi/go-mp3 v0.3.1 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/rivo/tview v0.0.0-20210117162420-745e4ceeb711
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.1.1
 	gonum.org/v1/plot v0.8.1 // indirect
 )

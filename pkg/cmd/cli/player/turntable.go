@@ -8,7 +8,7 @@ import (
 // Turntable give some functions of music player
 type Turntable struct {
 	*tview.Flex
-	app *App
+	app *Player
 
 	djName        *DefaultView
 	turntableID   *DefaultView
@@ -19,7 +19,7 @@ type Turntable struct {
 	meterBox      *MeterBox
 }
 
-func newTurntable(app *App) *Turntable {
+func newTurntable(app *Player) *Turntable {
 	t := &Turntable{
 		app:  app,
 		Flex: tview.NewFlex(),
@@ -62,7 +62,6 @@ func (t *Turntable) SetKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Rune() {
 		case 'a':
-			//fmt.Println("hogehoge")
 			t.app.musicTitle = "fuga"
 		}
 		//		fmt.Println(e.Rune())

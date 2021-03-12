@@ -1,49 +1,188 @@
 package player
 
 import (
-	"fmt"
+	"database/sql"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 )
 
 // Selector is panel for selecting music
 type Selector struct {
 	*tview.Flex
-	app *App
+	app *Player
 
-	djID        *DefaultView
-	turntableID *DefaultView
-	musicTitle  *DefaultView
+	musicListView *tview.Table
+	musicDetail   *DefaultView
+	musicList     []*MusicInfo
+
+	analyzer *Analyzer
 }
 
-func newSelector(app *App) *Selector {
+// MusicInfo have details of mp3 files
+type MusicInfo struct {
+	Status     string
+	Path       string
+	Album      string
+	Title      string
+	Authors    string
+	Duration   int
+	SampleRate int
+	Format     string
+}
+
+func newSelector(app *Player) *Selector {
 	s := &Selector{
 		app:  app,
 		Flex: tview.NewFlex(),
 
-		djID:        NewDefaultView("DJ"),
-		turntableID: NewDefaultView("TurnTable"),
-		musicTitle:  NewDefaultView("Music"),
+		musicListView: tview.NewTable().SetSelectable(true, false).Select(0, 0).SetFixed(1, 1),
+		musicDetail:   NewDefaultView("Music Detail"),
+		analyzer:      newAnalyzer(),
 	}
 	s.SetTitle("selector")
 
+	// set header
+	headers := []string{
+		"Status",
+		"Album",
+		"Title",
+		"Duration",
+		"Authors",
+		"Path",
+	}
+
+	for i, header := range headers {
+		s.musicListView.SetCell(0, i, &tview.TableCell{
+			Text:            header,
+			NotSelectable:   true,
+			Align:           tview.AlignLeft,
+			Color:           tcell.ColorWhite,
+			BackgroundColor: tcell.ColorDefault,
+			Attributes:      tcell.AttrBold,
+		})
+	}
+	// list music file path from path
+	musicPathList := s.listMusic("dummy/path")
+	s.musicList = make([]*MusicInfo, 3)
+
+	// get music info from db
+	dbPath := "mp3/test.db"
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		report(err)
+	}
+	rows, err := db.Query("SELECT path, title, album, authors, duration, sampleRate, format FROM music")
+	if err != nil {
+		report(err)
+	}
+
+	count := 0
+	for rows.Next() {
+		mi := &MusicInfo{}
+
+		if err := rows.Scan(&mi.Path, &mi.Title, &mi.Album, &mi.Authors, &mi.Duration, &mi.SampleRate, &mi.Format); err != nil {
+			report(err)
+		}
+
+		if contains(mi.Path, musicPathList) {
+			mi.Status = "✔"
+			musicPathList = del(mi.Path, musicPathList)
+		} else {
+			mi.Status = "Moved"
+		}
+
+		s.musicList[count] = mi
+		count++
+	}
+
+	for _, musicPath := range musicPathList {
+		mi := &MusicInfo{}
+		mi.Path = musicPath
+		mi.Title = filepath.Base(musicPath)
+		mi.Status = "Not Analyzed"
+		s.musicList = append(s.musicList, mi)
+	}
+
+	for i, musicInfo := range s.musicList {
+		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 2, tview.NewTableCell(musicInfo.Title).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 3, tview.NewTableCell(strconv.Itoa(musicInfo.Duration)).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 4, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 5, tview.NewTableCell(musicInfo.Path).SetMaxWidth(1).SetExpansion(1))
+	}
+
+	s.musicListView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle("MusicList")
+
 	s.SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-			AddItem(s.turntableID, 0, 2, false).
-			AddItem(s.djID, 0, 2, true).
-			AddItem(s.musicTitle, 0, 3, false), 0, 1, false)
+			AddItem(s.musicListView, 0, 4, false).
+			AddItem(s.musicDetail, 0, 2, false), 0, 1, false)
 
 	s.SetKeyHandler()
 	return s
 }
 
+func contains(path string, list []string) bool {
+	for _, s := range list {
+		if s == path {
+			return true
+		}
+	}
+	return false
+}
+
+func del(path string, list []string) []string {
+	for i, s := range list {
+		if s == path {
+			if i < len(list)-1 {
+				return append(list[:i], list[i+1:]...)
+			}
+			return list[:i]
+		}
+	}
+	return list
+}
+
+// SetKeyHandler is
 func (s *Selector) SetKeyHandler() {
 	s.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Rune() {
-		case 'b':
-			fmt.Println("fuag")
+		case 'a':
+			s.musicDetail.SetText("test")
+			logrus.Debug(s.musicList)
+			for _, m := range s.musicList {
+				logrus.Debug(m.Status)
+				if m.Status == "Not Analyzed" {
+					s.analyzer.analyzeMusic(m)
+				}
+			}
+		case 'l':
+			// load music
+			row, _ := s.musicListView.GetSelection()
+			target := s.musicListView.GetCell(row, 5).Text
+			s.app.LoadMusic(target)
 		}
 		return e
 	})
+}
+
+func (s *Selector) listMusic(musicPath string) []string {
+	r := regexp.MustCompile(`.*mp3`)
+	cd, _ := os.Getwd()
+	fileInfos, _ := os.ReadDir(cd + "/mp3")
+	var list []string
+	for _, fileInfo := range fileInfos {
+		if !r.MatchString(fileInfo.Name()) {
+			continue
+		}
+		list = append(list, cd+"/mp3/"+fileInfo.Name())
+	}
+	return list
 }
