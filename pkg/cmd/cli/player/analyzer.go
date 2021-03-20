@@ -23,26 +23,8 @@ func newAnalyzer() *Analyzer {
 	return a
 }
 
-// analyzeDir anlyze musics in reffered directory and create info record to sqlite
-//func (a *Analyzer) analyzeDir(path string) {
-//	// ToDo: fix
-//	musicList := a.listMusic("dummy")
-//	finished := make(chan bool)
-//	for _, music := range musicList {
-//		musicPath := music
-//		go func() {
-//			a.analyzeMusic(musicPath)
-//			finished <- true
-//		}()
-//	}
-//	for i := 0; i < len(musicList); i++ {
-//		<-finished
-//	}
-//}
-
 // analyzeMusic analyze music reffered path
 func (a *Analyzer) analyzeMusic(musicInfo *MusicInfo) {
-	// generate and write each wave info to waveDir
 	a.wvfmr.MusicPath = musicInfo.Path
 	wvfm, err := a.wvfmr.GenWaveForm()
 	// ToDo: avoid os.Exit when analyzer failed
@@ -52,9 +34,10 @@ func (a *Analyzer) analyzeMusic(musicInfo *MusicInfo) {
 	wvfm.MusicTitle = musicInfo.Title
 
 	// set sqlite
-	logrus.Debug("registerrrrrrrrrr")
+	logrus.Debug("start create and register waveform:", musicInfo.Path)
 	registerMusicInfo(musicInfo)
 	registerWaveform(wvfm)
+	logrus.Debug("finish create and register waveform")
 	return
 }
 
@@ -108,20 +91,3 @@ func registerWaveform(w *waveform.Waveform) {
 		report(err)
 	}
 }
-
-//func loadWaveform(title string) {
-//	dbPath := "mp3/test.db"
-//
-//	// ToDo: Implement error handling
-//	con, err := sql.Open("sqlite3", dbPath)
-//	if err != nil {
-//		log.Fatalln(err)
-//	}
-//
-//	cmd := "SELECT wave FROM waveform WHERE title = ?"
-//
-//	_, err = con.Exec(cmd, title)
-//	if err != nil {
-//		log.Fatalln(err)
-//	}
-//}

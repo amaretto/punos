@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/faiface/beep"
@@ -12,7 +13,9 @@ import (
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/gdamore/tcell/v2"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 )
 
 // Player is standalone dj player application
@@ -36,7 +39,10 @@ type Player struct {
 	volume     *effects.Volume
 
 	// waveform
-	wf []int
+	wf []byte
+
+	// cue
+	cuePoint int
 }
 
 // New return App instance
@@ -98,6 +104,7 @@ func (p *Player) Start() {
 			p.turntable.musicTitle.SetText(p.musicTitle)
 			p.app.Draw()
 			p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
+			p.turntable.waveformPanel.update(p.wf, p.streamer.Position())
 		}
 	}()
 	if err := p.app.SetRoot(p.pages, true).Run(); err != nil {
@@ -143,23 +150,111 @@ func (p *Player) LoadMusic(path string) {
 	speaker.Lock()
 	p.ctrl.Paused = !p.ctrl.Paused
 	speaker.Unlock()
+
+	p.loadWaveform(path)
 }
 
-func loadWaveform(title string) {
+func (p *Player) loadWaveform(path string) {
 	dbPath := "mp3/test.db"
 
-	// ToDo: Implement error handling
-	con, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", dbPath)
+	defer db.Close()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	cmd := "SELECT wave FROM waveform WHERE title = ?"
+	cmd := "SELECT wave FROM waveform WHERE path = ?"
 
-	_, err = con.Exec(cmd, title)
+	row := db.QueryRow(cmd, filepath.Base(path))
 	if err != nil {
 		log.Fatalln(err)
 	}
+	var data []byte
+	row.Scan(&data)
+	logrus.Debug(data)
+	p.wf = data
+}
+
+// Fforward fast-forward music
+func (p *Player) Fforward() {
+	speaker.Lock()
+	newPos := p.streamer.Position() + p.sampleRate.N(time.Millisecond*100)
+	if newPos >= p.streamer.Len() {
+		newPos = p.streamer.Len() - 1
+	}
+	if err := p.streamer.Seek(newPos); err != nil {
+		report(err)
+	}
+	speaker.Unlock()
+}
+
+// Rewind rewind music
+func (p *Player) Rewind() {
+	speaker.Lock()
+	newPos := p.streamer.Position() - p.sampleRate.N(time.Millisecond*100)
+	if newPos < 0 {
+		newPos = 0
+	}
+	if err := p.streamer.Seek(newPos); err != nil {
+		report(err)
+	}
+	speaker.Unlock()
+}
+
+// Cue set and return cue point
+func (p *Player) Cue() {
+	// ToDo : adopt multiple cue point
+	if p.ctrl.Paused {
+		speaker.Lock()
+		p.cuePoint = p.streamer.Position()
+		speaker.Unlock()
+	} else {
+		speaker.Lock()
+		p.streamer.Seek(p.cuePoint)
+		speaker.Unlock()
+	}
+}
+
+// Volup increase volume of music
+func (p *Player) Volup() {
+	speaker.Lock()
+	p.volume.Volume += 0.1
+	speaker.Unlock()
+}
+
+// Voldown decrease volume of music
+func (p *Player) Voldown() {
+	speaker.Lock()
+	p.volume.Volume -= 0.1
+	speaker.Unlock()
+}
+
+// SetVol set volume
+func (p *Player) SetVol(volume float64) {
+	speaker.Lock()
+	p.volume.Volume = volume
+	speaker.Unlock()
+}
+
+// Spdup increase speed controll
+func (p *Player) Spdup() {
+	speaker.Lock()
+	p.resampler.SetRatio(p.resampler.Ratio() * 16 / 15)
+	speaker.Unlock()
+}
+
+// Spddown decrease volume controll
+func (p *Player) Spddown() {
+	speaker.Lock()
+	p.resampler.SetRatio(p.resampler.Ratio() * 15 / 16)
+	speaker.Unlock()
+}
+
+// SetSpd set speed
+func (p *Player) SetSpd(speed float64) {
+	speaker.Lock()
+	p.resampler.SetRatio(speed)
+	speaker.Unlock()
 }
 
 func report(err error) {

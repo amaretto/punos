@@ -69,7 +69,7 @@ func newSelector(app *Player) *Selector {
 	}
 	// list music file path from path
 	musicPathList := s.listMusic("dummy/path")
-	s.musicList = make([]*MusicInfo, 3)
+	s.musicList = make([]*MusicInfo, 0)
 
 	// get music info from db
 	dbPath := "mp3/test.db"
@@ -82,7 +82,6 @@ func newSelector(app *Player) *Selector {
 		report(err)
 	}
 
-	count := 0
 	for rows.Next() {
 		mi := &MusicInfo{}
 
@@ -97,8 +96,7 @@ func newSelector(app *Player) *Selector {
 			mi.Status = "Moved"
 		}
 
-		s.musicList[count] = mi
-		count++
+		s.musicList = append(s.musicList, mi)
 	}
 
 	for _, musicPath := range musicPathList {
@@ -155,7 +153,6 @@ func (s *Selector) SetKeyHandler() {
 	s.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Rune() {
 		case 'a':
-			s.musicDetail.SetText("test")
 			logrus.Debug(s.musicList)
 			for _, m := range s.musicList {
 				logrus.Debug(m.Status)

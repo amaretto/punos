@@ -3,6 +3,7 @@ package player
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 )
 
 // Turntable give some functions of music player
@@ -62,7 +63,15 @@ func (t *Turntable) SetKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Rune() {
 		case 'a':
-			t.app.musicTitle = "fuga"
+			logrus.Debug("hogehoge")
+		case 'l':
+			t.app.Fforward()
+		case 'h':
+			t.app.Rewind()
+		case 'j':
+			t.app.Voldown()
+		case 'k':
+			t.app.Volup()
 		}
 		//		fmt.Println(e.Rune())
 		return e
