@@ -73,7 +73,6 @@ func (t *Turntable) SetKeyHandler() {
 		case 'k':
 			t.app.Volup()
 		}
-		//		fmt.Println(e.Rune())
 		return e
 	})
 }

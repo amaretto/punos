@@ -15,7 +15,7 @@ import (
 // Selector is panel for selecting music
 type Selector struct {
 	*tview.Flex
-	app *Player
+	player *Player
 
 	musicListView *tview.Table
 	musicDetail   *DefaultView
@@ -24,22 +24,10 @@ type Selector struct {
 	analyzer *Analyzer
 }
 
-// MusicInfo have details of mp3 files
-type MusicInfo struct {
-	Status     string
-	Path       string
-	Album      string
-	Title      string
-	Authors    string
-	Duration   int
-	SampleRate int
-	Format     string
-}
-
-func newSelector(app *Player) *Selector {
+func newSelector(player *Player) *Selector {
 	s := &Selector{
-		app:  app,
-		Flex: tview.NewFlex(),
+		player: player,
+		Flex:   tview.NewFlex(),
 
 		musicListView: tview.NewTable().SetSelectable(true, false).Select(0, 0).SetFixed(1, 1),
 		musicDetail:   NewDefaultView("Music Detail"),
@@ -164,7 +152,7 @@ func (s *Selector) SetKeyHandler() {
 			// load music
 			row, _ := s.musicListView.GetSelection()
 			target := s.musicListView.GetCell(row, 5).Text
-			s.app.LoadMusic(target)
+			s.player.LoadMusic(target)
 		}
 		return e
 	})

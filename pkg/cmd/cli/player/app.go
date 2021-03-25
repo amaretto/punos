@@ -20,26 +20,27 @@ import (
 
 // Player is standalone dj player application
 type Player struct {
-	app       *tview.Application
-	playerID  string
+	// Controller
+	app      *tview.Application
+	playerID string
+
+	// GUI
 	pages     *tview.Pages
 	turntable *Turntable
 	selector  *Selector
 
 	// music info
+	musicInfo  *MusicInfo
 	musicTitle string
 	musicPath  string
 
-	// music
+	// audio
 	isPlay     bool
 	streamer   beep.StreamSeekCloser
 	ctrl       *beep.Ctrl
 	sampleRate beep.SampleRate
 	resampler  *beep.Resampler
 	volume     *effects.Volume
-
-	// waveform
-	wf []byte
 
 	// cue
 	cuePoint int
@@ -48,8 +49,9 @@ type Player struct {
 // New return App instance
 func New() *Player {
 	p := &Player{
-		app:   tview.NewApplication(),
-		pages: tview.NewPages(),
+		app:       tview.NewApplication(),
+		pages:     tview.NewPages(),
+		musicInfo: &MusicInfo{},
 	}
 
 	p.turntable = newTurntable(p)
@@ -60,8 +62,6 @@ func New() *Player {
 	p.pages.AddPage("selector", p.selector, true, false)
 
 	p.setAppGlobalKeyBinding()
-	// need to set focus to Primitive in Flex(HasFocus)
-	p.app.SetFocus(p.turntable.waveformPanel)
 
 	// init speaker
 	// source : speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
@@ -96,27 +96,6 @@ func (p *Player) setAppGlobalKeyBinding() {
 	})
 }
 
-func (p *Player) Start() {
-	p.LoadMusic("mp3/test.mp3")
-	go func() {
-		for {
-			time.Sleep(10 * time.Millisecond)
-			p.turntable.musicTitle.SetText(p.musicTitle)
-			p.app.Draw()
-			p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
-			p.turntable.waveformPanel.update(p.wf, p.streamer.Position())
-		}
-	}()
-	if err := p.app.SetRoot(p.pages, true).Run(); err != nil {
-		panic(err)
-	}
-}
-
-// Stop stop the application
-func (p *Player) Stop() {
-	p.app.Stop()
-}
-
 func (p *Player) LoadMusic(path string) {
 	if p.ctrl != nil {
 		speaker.Lock()
@@ -137,7 +116,6 @@ func (p *Player) LoadMusic(path string) {
 	if err != nil {
 		report(err)
 	}
-	// ToDo close streamer when music is switched
 
 	p.sampleRate = format.SampleRate
 	p.streamer = streamer
@@ -152,6 +130,8 @@ func (p *Player) LoadMusic(path string) {
 	speaker.Unlock()
 
 	p.loadWaveform(path)
+	p.pages.SwitchToPage("turntable")
+	p.app.SetFocus(p.turntable.waveformPanel)
 }
 
 func (p *Player) loadWaveform(path string) {
@@ -172,7 +152,33 @@ func (p *Player) loadWaveform(path string) {
 	var data []byte
 	row.Scan(&data)
 	logrus.Debug(data)
-	p.wf = data
+	p.musicInfo.Waveform = data
+}
+
+/////////////////////////////////////////////////////
+//////////////////// Control ////////////////////////
+/////////////////////////////////////////////////////
+func (p *Player) Start() {
+	go func() {
+		for {
+			time.Sleep(10 * time.Millisecond)
+			p.app.Draw()
+			// after load music
+			if p.ctrl != nil {
+				p.turntable.musicTitle.SetText(p.musicTitle)
+				p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
+				p.turntable.waveformPanel.update(p.musicInfo.Waveform, p.streamer.Position())
+			}
+		}
+	}()
+	if err := p.app.SetRoot(p.pages, true).Run(); err != nil {
+		panic(err)
+	}
+}
+
+// Stop stop the application
+func (p *Player) Stop() {
+	p.app.Stop()
 }
 
 // Fforward fast-forward music
