@@ -3,7 +3,7 @@ module github.com/amaretto/punos
 go 1.12
 
 require (
-	github.com/amaretto/waveform v0.0.0-20200506122337-fd4f880b5d51
+	github.com/amaretto/waveform v0.0.0-20210512181107-2372539edf07
 	github.com/faiface/beep v1.0.2
 	github.com/gdamore/tcell v1.4.0
 	github.com/gdamore/tcell/v2 v2.1.0
