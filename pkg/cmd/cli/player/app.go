@@ -65,8 +65,8 @@ func New() *Player {
 
 	// init speaker
 	// source : speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/30))
-	var sampleRate beep.SampleRate = 44100
-	speaker.Init(sampleRate, int(time.Duration(sampleRate)*(time.Second/30)/time.Second))
+	p.sampleRate = 44100
+	speaker.Init(p.sampleRate, int(time.Duration(p.sampleRate)*(time.Second/30)/time.Second))
 
 	return p
 }
@@ -96,7 +96,8 @@ func (p *Player) setAppGlobalKeyBinding() {
 	})
 }
 
-func (p *Player) LoadMusic(path string) {
+func (p *Player) LoadMusic(mi *MusicInfo) {
+	p.musicInfo = mi
 	if p.ctrl != nil {
 		speaker.Lock()
 		p.ctrl.Paused = true
@@ -104,12 +105,12 @@ func (p *Player) LoadMusic(path string) {
 		p.streamer.Close()
 	}
 
-	f, err := os.Open(path)
+	f, err := os.Open(mi.Path)
 	if err != nil {
 		report(err)
 	}
 	// update title
-	p.musicTitle = path
+	p.musicTitle = mi.Title
 
 	//var format beep.Format
 	streamer, format, err := mp3.Decode(f)
@@ -129,7 +130,7 @@ func (p *Player) LoadMusic(path string) {
 	p.ctrl.Paused = !p.ctrl.Paused
 	speaker.Unlock()
 
-	p.loadWaveform(path)
+	p.loadWaveform(mi.Path)
 	p.pages.SwitchToPage("turntable")
 	p.app.SetFocus(p.turntable.waveformPanel)
 }

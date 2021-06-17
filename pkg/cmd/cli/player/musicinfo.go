@@ -7,10 +7,11 @@ type MusicInfo struct {
 	Album      string
 	Title      string
 	Authors    string
-	Duration   int
+	Duration   string
 	SampleRate int
 	Format     string
 	Waveform   []byte
+	BPM        string
 }
 
 const SampleInterval = 800

@@ -4,6 +4,8 @@ go 1.12
 
 require (
 	github.com/amaretto/waveform v0.0.0-20210512181107-2372539edf07
+	github.com/benjojo/bpm v0.0.0-20181021194517-7b9b0c63ec95 // indirect
+	github.com/dhowden/tag v0.0.0-20201120070457-d52dcb253c63 // indirect
 	github.com/faiface/beep v1.0.2
 	github.com/gdamore/tcell v1.4.0
 	github.com/gdamore/tcell/v2 v2.1.0

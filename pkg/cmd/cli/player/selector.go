@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -31,18 +30,19 @@ func newSelector(player *Player) *Selector {
 
 		musicListView: tview.NewTable().SetSelectable(true, false).Select(0, 0).SetFixed(1, 1),
 		musicDetail:   NewDefaultView("Music Detail"),
-		analyzer:      newAnalyzer(),
+		//analyzer:      newAnalyzer(),
 	}
+	s.analyzer = newAnalyzer(s)
 	s.SetTitle("selector")
 
 	// set header
 	headers := []string{
 		"Status",
 		"Album",
+		"Authors",
 		"Title",
 		"Duration",
-		"Authors",
-		"Path",
+		"BPM",
 	}
 
 	for i, header := range headers {
@@ -65,7 +65,7 @@ func newSelector(player *Player) *Selector {
 	if err != nil {
 		report(err)
 	}
-	rows, err := db.Query("SELECT path, title, album, authors, duration, sampleRate, format FROM music")
+	rows, err := db.Query("SELECT path, title, album, authors, duration, sampleRate, format, bpm FROM music")
 	if err != nil {
 		report(err)
 	}
@@ -73,7 +73,7 @@ func newSelector(player *Player) *Selector {
 	for rows.Next() {
 		mi := &MusicInfo{}
 
-		if err := rows.Scan(&mi.Path, &mi.Title, &mi.Album, &mi.Authors, &mi.Duration, &mi.SampleRate, &mi.Format); err != nil {
+		if err := rows.Scan(&mi.Path, &mi.Title, &mi.Album, &mi.Authors, &mi.Duration, &mi.SampleRate, &mi.Format, &mi.BPM); err != nil {
 			report(err)
 		}
 
@@ -98,18 +98,19 @@ func newSelector(player *Player) *Selector {
 	for i, musicInfo := range s.musicList {
 		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 2, tview.NewTableCell(musicInfo.Title).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 3, tview.NewTableCell(strconv.Itoa(musicInfo.Duration)).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 4, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 5, tview.NewTableCell(musicInfo.Path).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 3, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 4, tview.NewTableCell(musicInfo.Title).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 5, tview.NewTableCell(musicInfo.Duration).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 6, tview.NewTableCell(musicInfo.BPM).SetMaxWidth(1).SetExpansion(1))
 	}
 
 	s.musicListView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle("MusicList")
 
 	s.SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-			AddItem(s.musicListView, 0, 4, false).
-			AddItem(s.musicDetail, 0, 2, false), 0, 1, false)
+			AddItem(s.musicListView, 0, 4, false),
+			//.AddItem(s.musicDetail, 0, 2, false),
+			0, 1, false)
 
 	s.SetKeyHandler()
 	return s
@@ -151,8 +152,7 @@ func (s *Selector) SetKeyHandler() {
 		case 'l':
 			// load music
 			row, _ := s.musicListView.GetSelection()
-			target := s.musicListView.GetCell(row, 5).Text
-			s.player.LoadMusic(target)
+			s.player.LoadMusic(s.musicList[row-1])
 		}
 		return e
 	})
