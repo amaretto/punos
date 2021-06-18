@@ -54,7 +54,7 @@ func newTurntable(app *Player) *Turntable {
 
 func (t *Turntable) initTurntable() {
 	// ToDo: set dj name and turntable from configuration or arguments
-	t.djName.SetText("anonymous")
+	t.djName.SetText(t.app.playerID)
 	t.turntableID.SetText("TurnTable")
 	t.SetKeyHandler()
 }

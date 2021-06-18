@@ -1,13 +1,17 @@
 package controller
 
 import (
+	"bufio"
+	"context"
+	"io"
+	"log"
+	"os"
 	"strconv"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-
+	pb "github.com/amaretto/punos/pkg/cmd/cli/pb"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 )
 
 // NewCommand create command
@@ -17,94 +21,133 @@ func NewCommand() *cobra.Command {
 		Short: "start punos controller",
 		Long:  `start punos controller`,
 		Run: func(cmd *cobra.Command, args []string) {
-			callBox()
+			controller()
 		},
 	}
 	return c
 }
 
-func callBox() {
-	app := tview.NewApplication()
+const (
+	address = "localhost:19003"
+)
 
-	// turntable id
-	turntableID := tview.NewTextView()
-	turntableID.SetBorder(true).SetTitle("Controller").SetTitleAlign(tview.AlignLeft)
-	turntableID.SetText("Server 1").SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-
-	// dj id
-	djID := tview.NewTextView()
-	djID.SetBorder(true).SetTitle("DJ").SetTitleAlign(tview.AlignLeft)
-	djID.SetText("amaretto").SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-
-	// music title
-	musicTitle := tview.NewTextView()
-	musicTitle.SetBorder(true).SetTitle("Music").SetTitleAlign(tview.AlignLeft)
-	musicTitle.SetText("WHAT YOU GOT").SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-
-	progressBar := tview.NewTextView()
-	progressBar.SetBorder(true).SetTitle("Progress").SetTitleAlign(tview.AlignLeft)
-	progressBar.SetText("[=========================>------------------] 3m15s/4m11s").SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-
-	waveformBox := tview.NewTextView()
-	waveformBox.SetBorder(true).SetTitle("Waveform").SetTitleAlign(tview.AlignLeft)
-
-	waveformString := `
-________   ___  ___   ________    ________   ________      
-|\   __ \ |\  \|\  \ |\   ___  \ |\   __  \ |\   ____\     
-\ \  \|\ \ \ \  \\  \\ \  \\ \  \\ \  \|\  \\ \  \___|_    
- \ \   ___\ \ \  \\  \\ \  \\ \  \\ \  \\\  \\ \_____  \   
-  \ \  \___| \ \  \\  \\ \  \\ \  \\ \  \\\  \\|____|\  \  
-   \ \__\     \ \_______\\\__\\ \__\\ \_______\ ____\_\  \ 
-    \|__|      \|_______| \|__| \|__| \|_______||\________\
-                                                \|________|
-`
-	waveformBox.SetText(waveformString).SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-
-	playpauseBox := tview.NewBox().SetBorder(true).SetTitle("PlayPause").SetTitleAlign(tview.AlignLeft)
-
-	meterBox := tview.NewFlex()
-	meterBox.SetDirection(tview.FlexColumn).SetBorder(true).SetTitle("Meters").SetTitleAlign(tview.AlignLeft)
-	volumeMeter := tview.NewTextView().SetText("┌─────┐\n│     │\n│     │\n│     │\n│     │\n│─025─│\n│─────│\n│─────│\n│─────│\n└─────┘\nspeed").SetTextAlign(tview.AlignCenter)
-	volumeMeter2 := tview.NewTextView().SetText("┌─────┐\n│     │\n│     │\n│     │\n│     │\n│-010-│\n│     │\n│     │\n│─────│\n└─────┘\nvolume").SetTextAlign(tview.AlignCenter)
-	volumeMeter3 := tview.NewTextView().SetText("┌─────┐\n│     │\n│     │\n│     │\n│─────│\n│─120-│\n│─────│\n│─────│\n│─────│\n└─────┘\nbpm").SetTextAlign(tview.AlignCenter)
-	volumeMeter4 := tview.NewTextView().SetText("┌─────┐\n│     │\n│─────│\n│─────│\n│─────│\n│─080─│\n│─────│\n│─────│\n│─────│\n└─────┘\nfilter").SetTextAlign(tview.AlignCenter)
-	meterBox.AddItem(volumeMeter, 0, 1, false).AddItem(volumeMeter2, 0, 1, false).AddItem(volumeMeter3, 0, 1, false).AddItem(volumeMeter4, 0, 1, false)
-
-	//meterBox := tview.NewBox().SetBorder(true).SetTitle("Meters").SetTitleAlign(tview.AlignLeft)
-
-	// layout
-	flex := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-			AddItem(turntableID, 0, 2, false).
-			AddItem(djID, 0, 2, false).
-			AddItem(musicTitle, 0, 3, false), 0, 1, false).
-		AddItem(progressBar, 0, 1, false).
-		AddItem(waveformBox, 0, 6, false).
-		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-			AddItem(playpauseBox, 0, 3, false).
-			AddItem(meterBox, 0, 7, false), 0, 4, false)
-
-	dummyPage := tview.NewTextView()
-	dummyPage.SetText("hogehogehoge").SetTextAlign(tview.AlignCenter).SetTextColor(tcell.ColorGreenYellow)
-
-	pages := tview.NewPages()
-	pages.AddPage("ttpanel", flex, true, true)
-	pages.AddPage("dummyPage", dummyPage, true, false)
-
-	pages.SwitchToPage("ttpanel")
-	go func() {
-		for {
-			time.Sleep(1 * time.Millisecond)
-			musicTitle.SetText(strconv.FormatInt(time.Now().UnixNano(), 10))
-			app.Draw()
-			//pages.SwitchToPage("ttpanel")
-			//time.Sleep(1 * time.Second)
-			//pages.SwitchToPage("dummyPage")
-		}
-	}()
-
-	if err := app.SetRoot(pages, true).Run(); err != nil {
-		panic(err)
+func resgistTT(ctx context.Context, c pb.CtrlClient, id string) error {
+	r, err := c.RegistTT(ctx, &pb.TTRegistRequest{Id: id})
+	if err != nil {
+		return err
 	}
+	if r.Result {
+		log.Printf("Register turntable %s successful!\n", id)
+	} else {
+		log.Printf("Register turntable %s failed!\n", id)
+	}
+	return nil
+}
+
+func resgistCtrl(ctx context.Context, c pb.CtrlClient, id string) error {
+	r, err := c.RegistCtrl(ctx, &pb.CtrlRegistRequest{Id: id})
+	if err != nil {
+		return err
+	}
+	if r.Result {
+		log.Printf("Register ctrl %s successful!\n", id)
+	} else {
+		log.Printf("Register ctrl %s failed!\n", id)
+	}
+	return nil
+}
+
+func sendTTCmd(c pb.CtrlClient) error {
+	stdin := bufio.NewScanner(os.Stdin)
+	stream, err := c.SendTTCmd(context.Background())
+	if err != nil {
+		return err
+	}
+	log.Printf("Start to send command")
+
+	for {
+		stdin.Scan()
+		text := stdin.Text()
+		if err := stream.Send(&pb.TTCmdRequest{Cmd: text}); err != nil {
+
+		}
+		if text == "exit" {
+			break
+		}
+	}
+	_, err = stream.CloseAndRecv()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getTTCmd(c pb.CtrlClient, id string) error {
+	req := &pb.GetTTCmdRequest{Id: id}
+	stream, err := c.GetTTCmd(context.Background(), req)
+	if err != nil {
+		return err
+	}
+
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		log.Printf("Get cmd: %s\n", msg.Cmd)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func controller() {
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Printf("Failed to connect server\n")
+	}
+	defer conn.Close()
+	c := pb.NewCtrlClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	err = resgistCtrl(ctx, c, strconv.Itoa(int(time.Now().Unix())))
+	if err != nil {
+		log.Printf("Failed to exec register Ctrl command :%v\n", os.Args)
+	}
+
+	err = sendTTCmd(c)
+	if err != nil {
+		log.Printf("Failed to start sending command :%v\n", os.Args)
+	}
+
+	//	if len(os.Args) > 2 {
+	//		switch os.Args[1] {
+	//		case "registTT":
+	//			err := resgistTT(ctx, c, os.Args[2])
+	//			if err != nil {
+	//				log.Printf("Failed to exec register TT command :%v\n", os.Args)
+	//			}
+	//		case "registCtrl":
+	//			err := resgistCtrl(ctx, c, os.Args[2])
+	//			if err != nil {
+	//				log.Printf("Failed to exec register Ctrl command :%v\n", os.Args)
+	//			}
+	//		case "sendTTCmd":
+	//			err := sendTTCmd(c)
+	//			if err != nil {
+	//				log.Printf("Failed to start sending command :%v\n", os.Args)
+	//			}
+	//		case "getTTCmd":
+	//			err := getTTCmd(c, os.Args[2])
+	//			if err != nil {
+	//				log.Printf("Failed to start accespting command :%v\n", os.Args)
+	//			}
+	//		}
+	//	} else {
+	//		log.Fatalf("Need arguments.")
+	//	}
 
 }
