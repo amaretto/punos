@@ -16,9 +16,17 @@ type Meter struct {
 	label string
 }
 
-func (mb *MeterBox) update() {
-	for _, m := range mb.meters {
-		val, max := 50, 100
+func (mb *MeterBox) update(volume, speed int) {
+	var val, max int
+	for i, m := range mb.meters {
+
+		if i == 0 {
+			val, max = volume, 200
+		} else if i == 1 {
+			val, max = speed, 200
+		} else {
+			val, max = 100, 200
+		}
 		_, _, width, height := m.GetRect()
 		m.SetText(m.genMeter(val, max, height, width, m.label))
 	}
@@ -27,7 +35,7 @@ func (mb *MeterBox) update() {
 func NewMeterBox() *MeterBox {
 	mb := &MeterBox{
 		Flex:   tview.NewFlex(),
-		meters: []*Meter{&Meter{tview.NewTextView(), "volume"}, &Meter{tview.NewTextView(), "speed"}, &Meter{tview.NewTextView(), "pitch"}, &Meter{tview.NewTextView(), "filter"}},
+		meters: []*Meter{&Meter{tview.NewTextView(), "volume"}, &Meter{tview.NewTextView(), "speed"}, &Meter{tview.NewTextView(), "pitch(N/A)"}, &Meter{tview.NewTextView(), "filter(N/A)"}},
 	}
 
 	mb.SetDirection(tview.FlexColumn).SetBorder(true).SetTitle("Meters").SetTitleAlign(tview.AlignLeft).SetBorderPadding(2, 2, 2, 2)
@@ -36,7 +44,7 @@ func NewMeterBox() *MeterBox {
 		mb.AddItem(m, 0, 1, false)
 	}
 
-	mb.update()
+	mb.update(100, 200)
 	return mb
 }
 

@@ -72,6 +72,10 @@ func (t *Turntable) SetKeyHandler() {
 			t.app.Voldown()
 		case 'k':
 			t.app.Volup()
+		case 'm':
+			t.app.Spdup()
+		case ',':
+			t.app.Spddown()
 		}
 		return e
 	})

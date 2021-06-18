@@ -39,6 +39,7 @@ func (a *Analyzer) analyzeMusic(musicInfo *MusicInfo) {
 
 	// ToDo: avoid os.Exit when analyzer failed
 	if err != nil {
+		logrus.Debug(err)
 		report(err)
 	}
 	wvfm.MusicTitle = musicInfo.Title
@@ -46,6 +47,7 @@ func (a *Analyzer) analyzeMusic(musicInfo *MusicInfo) {
 	// ToDo: analyze music info
 	err = a.analyzeMusicInfo(musicInfo)
 	if err != nil {
+		logrus.Debug(err)
 		report(err)
 	}
 
@@ -59,15 +61,19 @@ func (a *Analyzer) analyzeMusic(musicInfo *MusicInfo) {
 }
 
 func (a *Analyzer) analyzeMusicInfo(musicInfo *MusicInfo) error {
+	logrus.Debug("analyze")
 	f, err := os.Open(musicInfo.Path)
 	if err != nil {
+		logrus.Debug(err)
 		report(err)
 	}
 	defer f.Close()
 
 	// get meta data
+	logrus.Debug("get meta")
 	m, err := tag.ReadFrom(f)
 	if err != nil {
+		logrus.Debug(err)
 		report(err)
 	}
 
@@ -78,10 +84,12 @@ func (a *Analyzer) analyzeMusicInfo(musicInfo *MusicInfo) error {
 	// get duration and bpm
 	streamer, _, err := mp3.Decode(f)
 	if err != nil {
+		logrus.Debug(err)
 		report(err)
 	}
 	defer streamer.Close()
 
+	logrus.Debug("get bpm")
 	duration := int(a.selector.player.sampleRate.D(streamer.Len()).Round(time.Second).Seconds())
 	musicInfo.Duration = fmt.Sprintf("%d:%02d", duration/60, duration%60)
 
@@ -149,6 +157,7 @@ func registerMusicInfo(musicInfo *MusicInfo) {
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
+		logrus.Debug(err)
 		report(err)
 	}
 	cmd := "INSERT INTO music(path, title, album, duration, authors, sampleRate, format, bpm) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
@@ -164,6 +173,7 @@ func registerWaveform(w *waveform.Waveform) {
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
+		logrus.Debug(err)
 		report(err)
 	}
 

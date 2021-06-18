@@ -30,7 +30,6 @@ func newSelector(player *Player) *Selector {
 
 		musicListView: tview.NewTable().SetSelectable(true, false).Select(0, 0).SetFixed(1, 1),
 		musicDetail:   NewDefaultView("Music Detail"),
-		//analyzer:      newAnalyzer(),
 	}
 	s.analyzer = newAnalyzer(s)
 	s.SetTitle("selector")
@@ -98,10 +97,10 @@ func newSelector(player *Player) *Selector {
 	for i, musicInfo := range s.musicList {
 		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 3, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 4, tview.NewTableCell(musicInfo.Title).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 5, tview.NewTableCell(musicInfo.Duration).SetMaxWidth(1).SetExpansion(1))
-		s.musicListView.SetCell(i+1, 6, tview.NewTableCell(musicInfo.BPM).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 2, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 3, tview.NewTableCell(musicInfo.Title).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 4, tview.NewTableCell(musicInfo.Duration).SetMaxWidth(1).SetExpansion(1))
+		s.musicListView.SetCell(i+1, 5, tview.NewTableCell(musicInfo.BPM).SetMaxWidth(1).SetExpansion(1))
 	}
 
 	s.musicListView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle("MusicList")
@@ -144,7 +143,6 @@ func (s *Selector) SetKeyHandler() {
 		case 'a':
 			logrus.Debug(s.musicList)
 			for _, m := range s.musicList {
-				logrus.Debug(m.Status)
 				if m.Status == "Not Analyzed" {
 					s.analyzer.analyzeMusic(m)
 				}

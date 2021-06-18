@@ -15,7 +15,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 )
 
 // Player is standalone dj player application
@@ -152,7 +151,6 @@ func (p *Player) loadWaveform(path string) {
 	}
 	var data []byte
 	row.Scan(&data)
-	logrus.Debug(data)
 	p.musicInfo.Waveform = data
 }
 
@@ -169,6 +167,7 @@ func (p *Player) Start() {
 				p.turntable.musicTitle.SetText(p.musicTitle)
 				p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
 				p.turntable.waveformPanel.update(p.musicInfo.Waveform, p.streamer.Position())
+				p.turntable.meterBox.update(int((p.volume.Volume+1)*100), int(p.resampler.Ratio()*100))
 			}
 		}
 	}()
