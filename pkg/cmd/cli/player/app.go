@@ -1,17 +1,14 @@
 package player
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
-	pb "github.com/amaretto/punos/pkg/cmd/cli/pb"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
@@ -19,8 +16,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 // Player is standalone dj player application
@@ -166,67 +161,69 @@ func (p *Player) loadWaveform(path string) {
 /////////////////////////////////////////////////////
 func (p *Player) Start() {
 
-	// ToDo : separate method
-	address := "localhost:19003"
-	// create gRPC Client
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Printf("Failed to connect server\n")
-	}
-	defer conn.Close()
-	c := pb.NewCtrlClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+	/*
+		// ToDo : separate method
+		address := "localhost:19003"
+		// create gRPC Client
+		conn, err := grpc.Dial(address, grpc.WithInsecure())
+		if err != nil {
+			log.Printf("Failed to connect server\n")
+		}
+		defer conn.Close()
+		c := pb.NewCtrlClient(conn)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
 
-	// ToDo : register turn table
-	var flag bool
-	r, err := c.RegistTT(ctx, &pb.TTRegistRequest{Id: p.playerID})
-	if err != nil {
-		logrus.Debug(err)
-	}
-	if r.Result {
-		logrus.Debugf("Register turntable %s successful!\n", p.playerID)
-		flag = true
-	} else {
-		logrus.Debugf("Register turntable %s failed!\n", p.playerID)
-	}
+		// ToDo : register turn table
+		var flag bool
+		r, err := c.RegistTT(ctx, &pb.TTRegistRequest{Id: p.playerID})
+		if err != nil {
+			logrus.Debug(err)
+		}
+		if r.Result {
+			logrus.Debugf("Register turntable %s successful!\n", p.playerID)
+			flag = true
+		} else {
+			logrus.Debugf("Register turntable %s failed!\n", p.playerID)
+		}
 
-	// ToDo : getTTCmd
-	req := &pb.GetTTCmdRequest{Id: p.playerID}
-	stream, err := c.GetTTCmd(context.Background(), req)
-	if err != nil {
-		logrus.Debug(err)
-	}
+		// ToDo : getTTCmd
+		req := &pb.GetTTCmdRequest{Id: p.playerID}
+		stream, err := c.GetTTCmd(context.Background(), req)
+		if err != nil {
+			logrus.Debug(err)
+		}
 
-	if flag {
-		go func() {
-			for {
-				logrus.Debug("from remote controller")
-				msg, err := stream.Recv()
-				if err == io.EOF {
-					flag = false
-				}
-				if msg.Cmd != "" {
-					switch msg.Cmd[0] {
-					case 'a':
-						logrus.Debug("hogehoge")
-					case 'l':
-						p.Fforward()
-					case 'h':
-						p.Rewind()
-					case 'j':
-						p.Voldown()
-					case 'k':
-						p.Volup()
-					case 'm':
-						p.Spdup()
-					case ',':
-						p.Spddown()
+		if flag {
+			go func() {
+				for {
+					logrus.Debug("from remote controller")
+					msg, err := stream.Recv()
+					if err == io.EOF {
+						flag = false
+					}
+					if msg.Cmd != "" {
+						switch msg.Cmd[0] {
+						case 'a':
+							logrus.Debug("hogehoge")
+						case 'l':
+							p.Fforward()
+						case 'h':
+							p.Rewind()
+						case 'j':
+							p.Voldown()
+						case 'k':
+							p.Volup()
+						case 'm':
+							p.Spdup()
+						case ',':
+							p.Spddown()
+						}
 					}
 				}
-			}
-		}()
-	}
+			}()
+		}
+	*/
 
 	go func() {
 		for {
