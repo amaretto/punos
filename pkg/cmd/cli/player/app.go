@@ -24,6 +24,9 @@ type Player struct {
 	app      *tview.Application
 	playerID string
 
+	// config
+	dbPath string
+
 	// GUI
 	pages     *tview.Pages
 	turntable *Turntable
@@ -47,9 +50,31 @@ type Player struct {
 }
 
 // New return App instance
-func New() *Player {
+func New(confPath string) *Player {
+	//ToDo: copy template
+	if _, err := os.Stat(confPath); os.IsNotExist(err) {
+		if err := os.Mkdir(".punos", 0777); err != nil {
+			fmt.Println(err)
+		}
+		fp, err := os.Create(confPath)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+		defer fp.Close()
+
+		raw := `
+musicPath: .
+dbPath: ~/.punos/punos.db`
+		fp.WriteString(raw)
+	}
+
+	//ToDo: load conf yaml from confPath
+	dbPath := ""
+
 	p := &Player{
 		app:       tview.NewApplication(),
+		dbPath:    dbPath,
 		pages:     tview.NewPages(),
 		musicInfo: &MusicInfo{},
 		playerID:  strconv.Itoa(int(time.Now().Unix())),
@@ -70,6 +95,11 @@ func New() *Player {
 	speaker.Init(p.sampleRate, int(time.Duration(p.sampleRate)*(time.Second/30)/time.Second))
 
 	return p
+}
+
+func initDB(confPath string) error {
+	// ToDo : create table
+	return nil
 }
 
 func (p *Player) setAppGlobalKeyBinding() {
