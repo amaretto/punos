@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -51,12 +52,13 @@ type Player struct {
 
 // New return App instance
 func New(confPath string) *Player {
+	usr, _ := user.Current()
 	//ToDo: copy template
-	if _, err := os.Stat(confPath); os.IsNotExist(err) {
-		if err := os.Mkdir(".punos", 0777); err != nil {
+	if _, err := os.Stat(usr.HomeDir + confPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(usr.HomeDir+"/.punos", 0755); err != nil {
 			fmt.Println(err)
 		}
-		fp, err := os.Create(confPath)
+		fp, err := os.Create(usr.HomeDir + confPath)
 		if err != nil {
 			fmt.Println(err)
 			return nil
