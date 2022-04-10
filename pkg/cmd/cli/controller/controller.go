@@ -122,32 +122,4 @@ func controller() {
 	if err != nil {
 		log.Printf("Failed to start sending command :%v\n", os.Args)
 	}
-
-	//	if len(os.Args) > 2 {
-	//		switch os.Args[1] {
-	//		case "registTT":
-	//			err := resgistTT(ctx, c, os.Args[2])
-	//			if err != nil {
-	//				log.Printf("Failed to exec register TT command :%v\n", os.Args)
-	//			}
-	//		case "registCtrl":
-	//			err := resgistCtrl(ctx, c, os.Args[2])
-	//			if err != nil {
-	//				log.Printf("Failed to exec register Ctrl command :%v\n", os.Args)
-	//			}
-	//		case "sendTTCmd":
-	//			err := sendTTCmd(c)
-	//			if err != nil {
-	//				log.Printf("Failed to start sending command :%v\n", os.Args)
-	//			}
-	//		case "getTTCmd":
-	//			err := getTTCmd(c, os.Args[2])
-	//			if err != nil {
-	//				log.Printf("Failed to start accespting command :%v\n", os.Args)
-	//			}
-	//		}
-	//	} else {
-	//		log.Fatalf("Need arguments.")
-	//	}
-
 }
