@@ -19,7 +19,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-// Player is standalone dj player application
+// Player is a standalone dj player application
 type Player struct {
 	// Controller
 	app      *tview.Application
@@ -50,19 +50,18 @@ type Player struct {
 	cuePoint int
 }
 
-// New return App instance
-func New(confPath string) *Player {
+func loadConfig(confPath string) error {
 	usr, _ := user.Current()
-	//ToDo: separate method
-	//ToDo: copy template
+	// ToDo: copy template if configPath isn't specified
+	// ToDo: replace homedir string
 	if _, err := os.Stat(usr.HomeDir + confPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(usr.HomeDir+"/.punos", 0755); err != nil {
-			fmt.Println(err)
+			return err
 		}
 		fp, err := os.Create(usr.HomeDir + confPath)
 		if err != nil {
 			fmt.Println(err)
-			return nil
+			return err
 		}
 		defer fp.Close()
 
@@ -70,6 +69,16 @@ func New(confPath string) *Player {
 musicPath: .
 dbPath: ~/.punos/punos.db`
 		fp.WriteString(raw)
+	}
+	return nil
+}
+
+// New return App instance
+func New(confPath string) *Player {
+
+	err := loadConfig(confPath)
+	if err != nil {
+		report(err)
 	}
 
 	//ToDo: load conf yaml from confPath
