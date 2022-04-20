@@ -24,7 +24,7 @@ func NewCommand() *cobra.Command {
 		},
 	}
 
-	c.Flags().StringVarP(&o.confPath, "conf", "c", "/.punos/conf", "config path")
+	c.Flags().StringVarP(&o.confPath, "conf", "c", "~/.punos", "config path")
 
 	return c
 }

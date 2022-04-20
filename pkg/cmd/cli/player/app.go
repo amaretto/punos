@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/faiface/beep"
@@ -52,21 +53,23 @@ type Player struct {
 
 func loadConfig(confPath string) error {
 	usr, _ := user.Current()
-	// ToDo: copy template if configPath isn't specified
-	// ToDo: replace homedir string
-	if _, err := os.Stat(usr.HomeDir + confPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(usr.HomeDir+"/.punos", 0755); err != nil {
+	if strings.HasPrefix(confPath, "~") {
+		confPath = strings.Replace(confPath, "~", usr.HomeDir, 1)
+	}
+	fmt.Println(confPath)
+	if _, err := os.Stat(confPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(confPath, 0755); err != nil {
 			return err
 		}
-		fp, err := os.Create(usr.HomeDir + confPath)
+	}
+	if _, err := os.Stat(confPath + "/conf.yaml"); os.IsNotExist(err) {
+		fp, err := os.Create(confPath + "/conf.yaml")
 		if err != nil {
-			fmt.Println(err)
 			return err
 		}
 		defer fp.Close()
 
-		raw := `
-musicPath: .
+		raw := `musicPath: .
 dbPath: ~/.punos/punos.db`
 		fp.WriteString(raw)
 	}
