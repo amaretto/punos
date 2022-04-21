@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/faiface/beep"
@@ -51,38 +49,14 @@ type Player struct {
 	cuePoint int
 }
 
-func loadConfig(confPath string) error {
-	usr, _ := user.Current()
-	if strings.HasPrefix(confPath, "~") {
-		confPath = strings.Replace(confPath, "~", usr.HomeDir, 1)
-	}
-	fmt.Println(confPath)
-	if _, err := os.Stat(confPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(confPath, 0755); err != nil {
-			return err
-		}
-	}
-	if _, err := os.Stat(confPath + "/conf.yaml"); os.IsNotExist(err) {
-		fp, err := os.Create(confPath + "/conf.yaml")
-		if err != nil {
-			return err
-		}
-		defer fp.Close()
-
-		raw := `musicPath: .
-dbPath: ~/.punos/punos.db`
-		fp.WriteString(raw)
-	}
-	return nil
-}
-
 // New return App instance
 func New(confPath string) *Player {
 
-	err := loadConfig(confPath)
+	conf, err := loadConfig(confPath)
 	if err != nil {
 		report(err)
 	}
+	fmt.Println(conf)
 
 	//ToDo: load conf yaml from confPath
 	dbPath := ""

@@ -17,4 +17,5 @@ require (
 	github.com/spf13/cobra v1.1.1
 	gonum.org/v1/plot v0.8.1 // indirect
 	google.golang.org/grpc v1.38.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
