@@ -19,8 +19,6 @@ type Selector struct {
 	musicListView *tview.Table
 	musicDetail   *DefaultView
 	musicList     []*MusicInfo
-
-	analyzer *Analyzer
 }
 
 func newSelector(player *Player) *Selector {
@@ -31,7 +29,6 @@ func newSelector(player *Player) *Selector {
 		musicListView: tview.NewTable().SetSelectable(true, false).Select(0, 0).SetFixed(1, 1),
 		musicDetail:   NewDefaultView("Music Detail"),
 	}
-	s.analyzer = newAnalyzer(s)
 	s.SetTitle("selector")
 
 	// set header
@@ -144,7 +141,7 @@ func (s *Selector) SetKeyHandler() {
 			logrus.Debug(s.musicList)
 			for _, m := range s.musicList {
 				if m.Status == "Not Analyzed" {
-					s.analyzer.analyzeMusic(m)
+					s.player.analyzer.analyzeMusic(m)
 				}
 			}
 		case 'l':

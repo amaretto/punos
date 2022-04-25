@@ -24,6 +24,9 @@ type Player struct {
 	app      *tview.Application
 	playerID string
 
+	// Analyzer
+	analyzer *Analyzer
+
 	// config
 	dbPath string
 
@@ -69,6 +72,7 @@ func New(confPath string) *Player {
 		playerID:  strconv.Itoa(int(time.Now().Unix())),
 	}
 
+	p.analyzer = newAnalyzer(p)
 	p.turntable = newTurntable(p)
 	p.pages.AddPage("turntable", p.turntable, true, true)
 	p.pages.SwitchToPage("turntable")

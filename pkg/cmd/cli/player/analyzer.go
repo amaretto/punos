@@ -20,14 +20,14 @@ import (
 
 // Analyzer is
 type Analyzer struct {
-	selector *Selector
-	wvfmr    *waveform.Waveformer
+	player *Player
+	wvfmr  *waveform.Waveformer
 }
 
-func newAnalyzer(s *Selector) *Analyzer {
+func newAnalyzer(player *Player) *Analyzer {
 	a := &Analyzer{
-		selector: s,
-		wvfmr:    waveform.NewWaveformer(),
+		player: player,
+		wvfmr:  waveform.NewWaveformer(),
 	}
 	return a
 }
@@ -90,7 +90,7 @@ func (a *Analyzer) analyzeMusicInfo(musicInfo *MusicInfo) error {
 	defer streamer.Close()
 
 	logrus.Debug("get bpm")
-	duration := int(a.selector.player.sampleRate.D(streamer.Len()).Round(time.Second).Seconds())
+	duration := int(a.player.selector.player.sampleRate.D(streamer.Len()).Round(time.Second).Seconds())
 	musicInfo.Duration = fmt.Sprintf("%d:%02d", duration/60, duration%60)
 
 	musicInfo.BPM = fmt.Sprintf("%.2f", a.detectBPM(streamer))
