@@ -1,4 +1,4 @@
-package player
+package model
 
 // MusicInfo have details of mp3 files
 type MusicInfo struct {

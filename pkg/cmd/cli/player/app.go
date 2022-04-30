@@ -9,6 +9,9 @@ import (
 	"strconv"
 	"time"
 
+	// ToDo: fix
+	anlyzr "github.com/amaretto/punos/pkg/cmd/cli/analyzer"
+	mdl "github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
@@ -25,7 +28,7 @@ type Player struct {
 	playerID string
 
 	// Analyzer
-	analyzer *Analyzer
+	analyzer *anlyzr.Analyzer
 
 	// config
 	dbPath string
@@ -36,7 +39,7 @@ type Player struct {
 	selector  *Selector
 
 	// music info
-	musicInfo  *MusicInfo
+	musicInfo  *mdl.MusicInfo
 	musicTitle string
 	musicPath  string
 
@@ -68,11 +71,11 @@ func New(confPath string) *Player {
 		app:       tview.NewApplication(),
 		dbPath:    dbPath,
 		pages:     tview.NewPages(),
-		musicInfo: &MusicInfo{},
+		musicInfo: &mdl.MusicInfo{},
 		playerID:  strconv.Itoa(int(time.Now().Unix())),
 	}
 
-	p.analyzer = newAnalyzer(p)
+	p.analyzer = anlyzr.NewAnalyzer(p.sampleRate)
 	p.turntable = newTurntable(p)
 	p.pages.AddPage("turntable", p.turntable, true, true)
 	p.pages.SwitchToPage("turntable")
@@ -120,7 +123,7 @@ func (p *Player) setAppGlobalKeyBinding() {
 	})
 }
 
-func (p *Player) LoadMusic(mi *MusicInfo) {
+func (p *Player) LoadMusic(mi *mdl.MusicInfo) {
 	p.musicInfo = mi
 	if p.ctrl != nil {
 		speaker.Lock()

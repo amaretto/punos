@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	mdl "github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
@@ -18,7 +19,7 @@ type Selector struct {
 
 	musicListView *tview.Table
 	musicDetail   *DefaultView
-	musicList     []*MusicInfo
+	musicList     []*mdl.MusicInfo
 }
 
 func newSelector(player *Player) *Selector {
@@ -53,7 +54,7 @@ func newSelector(player *Player) *Selector {
 	}
 	// list music file path from path
 	musicPathList := s.listMusic("dummy/path")
-	s.musicList = make([]*MusicInfo, 0)
+	s.musicList = make([]*mdl.MusicInfo, 0)
 
 	// get music info from db
 	dbPath := "mp3/test.db"
@@ -67,7 +68,7 @@ func newSelector(player *Player) *Selector {
 	}
 
 	for rows.Next() {
-		mi := &MusicInfo{}
+		mi := &mdl.MusicInfo{}
 
 		if err := rows.Scan(&mi.Path, &mi.Title, &mi.Album, &mi.Authors, &mi.Duration, &mi.SampleRate, &mi.Format, &mi.BPM); err != nil {
 			report(err)
@@ -84,7 +85,7 @@ func newSelector(player *Player) *Selector {
 	}
 
 	for _, musicPath := range musicPathList {
-		mi := &MusicInfo{}
+		mi := &mdl.MusicInfo{}
 		mi.Path = musicPath
 		mi.Title = filepath.Base(musicPath)
 		mi.Status = "Not Analyzed"
@@ -141,7 +142,7 @@ func (s *Selector) SetKeyHandler() {
 			logrus.Debug(s.musicList)
 			for _, m := range s.musicList {
 				if m.Status == "Not Analyzed" {
-					s.player.analyzer.analyzeMusic(m)
+					s.player.analyzer.AnalyzeMusic(m)
 				}
 			}
 		case 'l':

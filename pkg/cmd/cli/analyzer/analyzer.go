@@ -1,6 +1,4 @@
-package player
-
-// ToDo: move pakage
+package analyzer
 
 import (
 	"database/sql"
@@ -10,6 +8,8 @@ import (
 	"regexp"
 	"time"
 
+	// ToDo: fix after merge branch
+	mdl "github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/amaretto/waveform/pkg/waveform"
 	"github.com/benjojo/bpm"
 	"github.com/dhowden/tag"
@@ -20,20 +20,20 @@ import (
 
 // Analyzer is
 type Analyzer struct {
-	player *Player
-	wvfmr  *waveform.Waveformer
+	sampleRate beep.SampleRate
+	wvfmr      *waveform.Waveformer
 }
 
-func newAnalyzer(player *Player) *Analyzer {
+func NewAnalyzer(sampleRate beep.SampleRate) *Analyzer {
 	a := &Analyzer{
-		player: player,
-		wvfmr:  waveform.NewWaveformer(),
+		sampleRate: sampleRate,
+		wvfmr:      waveform.NewWaveformer(),
 	}
 	return a
 }
 
 // analyzeMusic analyze music reffered path
-func (a *Analyzer) analyzeMusic(musicInfo *MusicInfo) {
+func (a *Analyzer) AnalyzeMusic(musicInfo *mdl.MusicInfo) {
 	a.wvfmr.MusicPath = musicInfo.Path
 	wvfm, err := a.wvfmr.GenWaveForm()
 
@@ -60,7 +60,7 @@ func (a *Analyzer) analyzeMusic(musicInfo *MusicInfo) {
 	return
 }
 
-func (a *Analyzer) analyzeMusicInfo(musicInfo *MusicInfo) error {
+func (a *Analyzer) analyzeMusicInfo(musicInfo *mdl.MusicInfo) error {
 	logrus.Debug("analyze")
 	f, err := os.Open(musicInfo.Path)
 	if err != nil {
@@ -90,7 +90,7 @@ func (a *Analyzer) analyzeMusicInfo(musicInfo *MusicInfo) error {
 	defer streamer.Close()
 
 	logrus.Debug("get bpm")
-	duration := int(a.player.selector.player.sampleRate.D(streamer.Len()).Round(time.Second).Seconds())
+	duration := int(a.sampleRate.D(streamer.Len()).Round(time.Second).Seconds())
 	musicInfo.Duration = fmt.Sprintf("%d:%02d", duration/60, duration%60)
 
 	musicInfo.BPM = fmt.Sprintf("%.2f", a.detectBPM(streamer))
@@ -152,7 +152,7 @@ func (a *Analyzer) listMusic(path string) []string {
 	return list
 }
 
-func registerMusicInfo(musicInfo *MusicInfo) {
+func registerMusicInfo(musicInfo *mdl.MusicInfo) {
 	dbPath := "mp3/test.db"
 
 	db, err := sql.Open("sqlite3", dbPath)
@@ -189,4 +189,10 @@ func registerWaveform(w *waveform.Waveform) {
 		logrus.Debug(err)
 		report(err)
 	}
+}
+
+//ToDo: fix it
+func report(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
 }
