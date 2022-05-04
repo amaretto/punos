@@ -1,4 +1,4 @@
-package player
+package config
 
 import (
 	"io/ioutil"
@@ -14,7 +14,7 @@ type Config struct {
 	DBPath    string `yaml:"dbPath"`
 }
 
-func loadConfig(confPath string) (Config, error) {
+func LoadConfig(confPath string) (Config, error) {
 	conf := Config{}
 	// rename current dir
 	usr, _ := user.Current()
@@ -29,7 +29,7 @@ func loadConfig(confPath string) (Config, error) {
 		}
 	}
 	if _, err := os.Stat(confPath + "/conf.yaml"); os.IsNotExist(err) {
-		createDefaultFile(confPath)
+		CreateDefaultFile(confPath)
 	}
 
 	// load conf
@@ -44,7 +44,7 @@ func loadConfig(confPath string) (Config, error) {
 	return conf, nil
 }
 
-func createDefaultFile(confPath string) error {
+func CreateDefaultFile(confPath string) error {
 	fp, err := os.Create(confPath + "/conf.yaml")
 	if err != nil {
 		return err

@@ -1,5 +1,13 @@
 package model
 
+import (
+	"database/sql"
+	"fmt"
+	"os"
+
+	conf "github.com/amaretto/punos/pkg/cmd/cli/config"
+)
+
 // MusicInfo have details of mp3 files
 type MusicInfo struct {
 	Status     string
@@ -14,7 +22,38 @@ type MusicInfo struct {
 	BPM        string
 }
 
+type Musics struct {
+	list []*MusicInfo
+	db   *sql.DB
+}
+
+func New(conf conf.Config) *Musics {
+	musics := &Musics{}
+	db, err := sql.Open("sqlite3", conf.DBPath)
+	if err != nil {
+		report(err)
+	}
+	defer db.Close()
+	musics.db = db
+	return musics
+}
+
+// ToDo: Implement
+func (m *Musics) GetMusics(path string) *Musics {
+	return nil
+}
+
+// ToDo: Implement
+func (m *Musics) loadWaveform(path string) {
+
+}
+
 const SampleInterval = 800
+
+// ToDo: Implement
+func initDB(confPath string) error {
+	return nil
+}
 
 func (m *MusicInfo) getWaveStr(pos, width, height int) []string {
 	return m.wave2str(m.getWave(pos, SampleInterval, width), height)
@@ -64,4 +103,9 @@ func (m *MusicInfo) wave2str(wave []byte, limit int) []string {
 		waveStr[limit-i] = str
 	}
 	return waveStr
+}
+
+func report(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
 }

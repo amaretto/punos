@@ -11,6 +11,7 @@ import (
 
 	// ToDo: fix
 	anlyzr "github.com/amaretto/punos/pkg/cmd/cli/analyzer"
+	conf "github.com/amaretto/punos/pkg/cmd/cli/config"
 	mdl "github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
@@ -58,7 +59,7 @@ type Player struct {
 // New return App instance
 func New(confPath string) *Player {
 
-	conf, err := loadConfig(confPath)
+	conf, err := conf.LoadConfig(confPath)
 	if err != nil {
 		report(err)
 	}
@@ -93,14 +94,8 @@ func New(confPath string) *Player {
 	return p
 }
 
-func initDB(confPath string) error {
-	// ToDo : create table
-	return nil
-}
-
 func (p *Player) setAppGlobalKeyBinding() {
 	p.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-
 		// global key binding
 		switch event.Key() {
 		case tcell.KeyESC:
