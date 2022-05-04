@@ -62,7 +62,6 @@ func New(confPath string) *Player {
 	if err != nil {
 		report(err)
 	}
-	fmt.Println(conf)
 
 	//ToDo: load conf yaml from confPath
 	dbPath := ""

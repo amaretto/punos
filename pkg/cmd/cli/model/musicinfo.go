@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 
 	"github.com/amaretto/punos/pkg/cmd/cli/config"
 )
@@ -23,19 +25,95 @@ type MusicInfo struct {
 }
 
 type Musics struct {
-	list []*MusicInfo
-	db   *sql.DB
+	List []*MusicInfo
+	DB   *sql.DB
+	conf *config.Config
 }
 
-func New(conf config.Config) *Musics {
-	musics := &Musics{}
+func NewMusics(conf *config.Config) *Musics {
 	db, err := sql.Open("sqlite3", conf.DBPath)
 	if err != nil {
 		report(err)
 	}
-	defer db.Close()
-	musics.db = db
+	//ToDo: fix it?
+	//defer db.Close()
+	musics := &Musics{conf: conf, DB: db}
 	return musics
+}
+
+func (m *Musics) Load() {
+	rows, err := m.DB.Query("SELECT path, title, album, authors, duration, sampleRate, format, bpm FROM music")
+	if err != nil {
+		report(err)
+	}
+
+	// retrieve data from DB
+	for rows.Next() {
+		mi := &MusicInfo{}
+		if err := rows.Scan(&mi.Path, &mi.Title, &mi.Album, &mi.Authors, &mi.Duration, &mi.SampleRate, &mi.Format, &mi.BPM); err != nil {
+			report(err)
+		}
+		m.List = append(m.List, mi)
+	}
+
+	// check music status
+	musicPathList := listMusic(m.conf.MusicPath)
+	m.checkMusicStatus(musicPathList)
+}
+
+func (m *Musics) checkMusicStatus(musicPathList []string) {
+	// data exists && no file
+	for _, mi := range m.List {
+		if contains(mi.Path, musicPathList) {
+			mi.Status = "✔"
+			musicPathList = del(mi.Path, musicPathList)
+		} else {
+			mi.Status = "Moved"
+		}
+	}
+
+	// file exists && no data
+	for _, musicPath := range musicPathList {
+		mi := &MusicInfo{}
+		mi.Path = musicPath
+		mi.Title = filepath.Base(musicPath)
+		mi.Status = "Not Analyzed"
+		m.List = append(m.List, mi)
+	}
+}
+
+func contains(path string, list []string) bool {
+	for _, s := range list {
+		if s == path {
+			return true
+		}
+	}
+	return false
+}
+
+func listMusic(musicPath string) []string {
+	r := regexp.MustCompile(`.*mp3`)
+	fileInfos, _ := os.ReadDir(musicPath)
+	var list []string
+	for _, fileInfo := range fileInfos {
+		if !r.MatchString(fileInfo.Name()) {
+			continue
+		}
+		list = append(list, musicPath+"/"+fileInfo.Name())
+	}
+	return list
+}
+
+func del(path string, list []string) []string {
+	for i, s := range list {
+		if s == path {
+			if i < len(list)-1 {
+				return append(list[:i], list[i+1:]...)
+			}
+			return list[:i]
+		}
+	}
+	return list
 }
 
 // ToDo: Implement

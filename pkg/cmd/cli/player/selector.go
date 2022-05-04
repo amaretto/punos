@@ -1,11 +1,10 @@
 package player
 
 import (
-	"database/sql"
 	"os"
-	"path/filepath"
 	"regexp"
 
+	"github.com/amaretto/punos/pkg/cmd/cli/config"
 	"github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -19,7 +18,8 @@ type Selector struct {
 
 	musicListView *tview.Table
 	musicDetail   *DefaultView
-	musicList     []*model.MusicInfo
+	// ToDo: move to controller
+	musicList *model.Musics
 }
 
 func newSelector(player *Player) *Selector {
@@ -52,47 +52,14 @@ func newSelector(player *Player) *Selector {
 			Attributes:      tcell.AttrBold,
 		})
 	}
-	// list music file path from path
-	musicPathList := s.listMusic("dummy/path")
-	s.musicList = make([]*model.MusicInfo, 0)
 
-	// get music info from db
-	dbPath := "mp3/test.db"
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		report(err)
-	}
-	rows, err := db.Query("SELECT path, title, album, authors, duration, sampleRate, format, bpm FROM music")
-	if err != nil {
-		report(err)
-	}
+	//ToDo: delete dummy
+	cd, _ := os.Getwd()
+	dummyConf := &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}
+	s.musicList = model.NewMusics(dummyConf)
+	s.musicList.Load()
 
-	for rows.Next() {
-		mi := &model.MusicInfo{}
-
-		if err := rows.Scan(&mi.Path, &mi.Title, &mi.Album, &mi.Authors, &mi.Duration, &mi.SampleRate, &mi.Format, &mi.BPM); err != nil {
-			report(err)
-		}
-
-		if contains(mi.Path, musicPathList) {
-			mi.Status = "✔"
-			musicPathList = del(mi.Path, musicPathList)
-		} else {
-			mi.Status = "Moved"
-		}
-
-		s.musicList = append(s.musicList, mi)
-	}
-
-	for _, musicPath := range musicPathList {
-		mi := &model.MusicInfo{}
-		mi.Path = musicPath
-		mi.Title = filepath.Base(musicPath)
-		mi.Status = "Not Analyzed"
-		s.musicList = append(s.musicList, mi)
-	}
-
-	for i, musicInfo := range s.musicList {
+	for i, musicInfo := range s.musicList.List {
 		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 2, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
@@ -140,7 +107,7 @@ func (s *Selector) SetKeyHandler() {
 		switch e.Rune() {
 		case 'a':
 			logrus.Debug(s.musicList)
-			for _, m := range s.musicList {
+			for _, m := range s.musicList.List {
 				if m.Status == "Not Analyzed" {
 					s.player.analyzer.AnalyzeMusic(m)
 				}
@@ -148,7 +115,7 @@ func (s *Selector) SetKeyHandler() {
 		case 'l':
 			// load music
 			row, _ := s.musicListView.GetSelection()
-			s.player.LoadMusic(s.musicList[row-1])
+			s.player.LoadMusic(s.musicList.List[row-1])
 		}
 		return e
 	})
