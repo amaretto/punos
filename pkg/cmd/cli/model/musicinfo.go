@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	conf "github.com/amaretto/punos/pkg/cmd/cli/config"
+	"github.com/amaretto/punos/pkg/cmd/cli/config"
 )
 
 // MusicInfo have details of mp3 files
@@ -27,7 +27,7 @@ type Musics struct {
 	db   *sql.DB
 }
 
-func New(conf conf.Config) *Musics {
+func New(conf config.Config) *Musics {
 	musics := &Musics{}
 	db, err := sql.Open("sqlite3", conf.DBPath)
 	if err != nil {

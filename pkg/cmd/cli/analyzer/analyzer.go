@@ -9,7 +9,7 @@ import (
 	"time"
 
 	// ToDo: fix after merge branch
-	mdl "github.com/amaretto/punos/pkg/cmd/cli/model"
+	"github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/amaretto/waveform/pkg/waveform"
 	"github.com/benjojo/bpm"
 	"github.com/dhowden/tag"
@@ -33,7 +33,7 @@ func NewAnalyzer(sampleRate beep.SampleRate) *Analyzer {
 }
 
 // analyzeMusic analyze music reffered path
-func (a *Analyzer) AnalyzeMusic(musicInfo *mdl.MusicInfo) {
+func (a *Analyzer) AnalyzeMusic(musicInfo *model.MusicInfo) {
 	a.wvfmr.MusicPath = musicInfo.Path
 	wvfm, err := a.wvfmr.GenWaveForm()
 
@@ -60,7 +60,7 @@ func (a *Analyzer) AnalyzeMusic(musicInfo *mdl.MusicInfo) {
 	return
 }
 
-func (a *Analyzer) analyzeMusicInfo(musicInfo *mdl.MusicInfo) error {
+func (a *Analyzer) analyzeMusicInfo(musicInfo *model.MusicInfo) error {
 	logrus.Debug("analyze")
 	f, err := os.Open(musicInfo.Path)
 	if err != nil {
@@ -152,7 +152,7 @@ func (a *Analyzer) listMusic(path string) []string {
 	return list
 }
 
-func registerMusicInfo(musicInfo *mdl.MusicInfo) {
+func registerMusicInfo(musicInfo *model.MusicInfo) {
 	dbPath := "mp3/test.db"
 
 	db, err := sql.Open("sqlite3", dbPath)

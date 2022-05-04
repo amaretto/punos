@@ -9,10 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	// ToDo: fix
-	anlyzr "github.com/amaretto/punos/pkg/cmd/cli/analyzer"
-	conf "github.com/amaretto/punos/pkg/cmd/cli/config"
-	mdl "github.com/amaretto/punos/pkg/cmd/cli/model"
+	"github.com/amaretto/punos/pkg/cmd/cli/analyzer"
+	"github.com/amaretto/punos/pkg/cmd/cli/config"
+	"github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
@@ -29,7 +28,7 @@ type Player struct {
 	playerID string
 
 	// Analyzer
-	analyzer *anlyzr.Analyzer
+	analyzer *analyzer.Analyzer
 
 	// config
 	dbPath string
@@ -40,7 +39,7 @@ type Player struct {
 	selector  *Selector
 
 	// music info
-	musicInfo  *mdl.MusicInfo
+	musicInfo  *model.MusicInfo
 	musicTitle string
 	musicPath  string
 
@@ -59,7 +58,7 @@ type Player struct {
 // New return App instance
 func New(confPath string) *Player {
 
-	conf, err := conf.LoadConfig(confPath)
+	conf, err := config.LoadConfig(confPath)
 	if err != nil {
 		report(err)
 	}
@@ -72,11 +71,11 @@ func New(confPath string) *Player {
 		app:       tview.NewApplication(),
 		dbPath:    dbPath,
 		pages:     tview.NewPages(),
-		musicInfo: &mdl.MusicInfo{},
+		musicInfo: &model.MusicInfo{},
 		playerID:  strconv.Itoa(int(time.Now().Unix())),
 	}
 
-	p.analyzer = anlyzr.NewAnalyzer(p.sampleRate)
+	p.analyzer = analyzer.NewAnalyzer(p.sampleRate)
 	p.turntable = newTurntable(p)
 	p.pages.AddPage("turntable", p.turntable, true, true)
 	p.pages.SwitchToPage("turntable")
@@ -118,7 +117,7 @@ func (p *Player) setAppGlobalKeyBinding() {
 	})
 }
 
-func (p *Player) LoadMusic(mi *mdl.MusicInfo) {
+func (p *Player) LoadMusic(mi *model.MusicInfo) {
 	p.musicInfo = mi
 	if p.ctrl != nil {
 		speaker.Lock()
