@@ -81,6 +81,8 @@ func (t *Turntable) SetKeyHandler() {
 			t.app.Spdup()
 		case ',':
 			t.app.Spddown()
+		case 'c':
+			t.app.Cue()
 		}
 		return e
 	})

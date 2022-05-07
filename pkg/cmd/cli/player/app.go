@@ -179,12 +179,7 @@ func (p *Player) Start() {
 			// after load music
 			if p.ctrl != nil {
 				p.turntable.update()
-				//p.turntable.musicTitle.SetText(p.nowPlaying.Title)
-				//p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
-				//p.turntable.waveformPanel.update(p.nowPlaying.Waveform, p.streamer.Position())
-				//p.turntable.meterBox.update(int((p.volume.Volume+1)*100), int(p.resampler.Ratio()*100))
 			}
-
 		}
 	}()
 	if err := p.app.SetRoot(p.pages, true).Run(); err != nil {

@@ -11,7 +11,6 @@ type Selector struct {
 	player *Player
 
 	musicListView *tview.Table
-	musicDetail   *DefaultView
 }
 
 func newSelector(player *Player) *Selector {
@@ -20,7 +19,6 @@ func newSelector(player *Player) *Selector {
 		Flex:   tview.NewFlex(),
 
 		musicListView: tview.NewTable().SetSelectable(true, false).Select(0, 0).SetFixed(1, 1),
-		musicDetail:   NewDefaultView("Music Detail"),
 	}
 	s.SetTitle("selector")
 
