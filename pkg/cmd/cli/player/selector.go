@@ -53,6 +53,7 @@ func newSelector(player *Player) *Selector {
 		})
 	}
 
+	//ToDo: move to controller
 	//ToDo: delete dummy
 	cd, _ := os.Getwd()
 	dummyConf := &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}
@@ -73,11 +74,14 @@ func newSelector(player *Player) *Selector {
 	s.SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(s.musicListView, 0, 4, false),
-			//.AddItem(s.musicDetail, 0, 2, false),
 			0, 1, false)
 
 	s.SetKeyHandler()
 	return s
+}
+
+func (s *Selector) update() {
+
 }
 
 func contains(path string, list []string) bool {

@@ -23,27 +23,20 @@ import (
 
 // Player is a standalone dj player application
 type Player struct {
-	// Controller
 	app      *tview.Application
 	playerID string
-
 	// Analyzer
 	analyzer *analyzer.Analyzer
-
-	// config
-	dbPath string
 
 	// GUI
 	pages     *tview.Pages
 	turntable *Turntable
 	selector  *Selector
 
-	// music info
-	musicInfo  *model.MusicInfo
-	musicTitle string
-	musicPath  string
+	// music
+	nowPlaying *model.MusicInfo
+	musics     *model.Musics
 
-	// audio
 	isPlay     bool
 	streamer   beep.StreamSeekCloser
 	ctrl       *beep.Ctrl
@@ -58,21 +51,18 @@ type Player struct {
 // New return App instance
 func New(confPath string) *Player {
 
-	//ToDo: fix it
+	//ToDo: load config
 	_, err := config.LoadConfig(confPath)
 	if err != nil {
 		report(err)
 	}
 
-	//ToDo: load conf yaml from confPath
-	dbPath := ""
-
+	// init player
 	p := &Player{
-		app:       tview.NewApplication(),
-		dbPath:    dbPath,
-		pages:     tview.NewPages(),
-		musicInfo: &model.MusicInfo{},
-		playerID:  strconv.Itoa(int(time.Now().Unix())),
+		app:        tview.NewApplication(),
+		pages:      tview.NewPages(),
+		nowPlaying: &model.MusicInfo{},
+		playerID:   strconv.Itoa(int(time.Now().Unix())),
 	}
 
 	p.analyzer = analyzer.NewAnalyzer(p.sampleRate)
@@ -112,13 +102,12 @@ func (p *Player) setAppGlobalKeyBinding() {
 			p.pages.SwitchToPage("turntable")
 			p.app.SetFocus(p.turntable.waveformPanel)
 		}
-
 		return event
 	})
 }
 
 func (p *Player) LoadMusic(mi *model.MusicInfo) {
-	p.musicInfo = mi
+	p.nowPlaying = mi
 	if p.ctrl != nil {
 		speaker.Lock()
 		p.ctrl.Paused = true
@@ -130,8 +119,6 @@ func (p *Player) LoadMusic(mi *model.MusicInfo) {
 	if err != nil {
 		report(err)
 	}
-	// update title
-	p.musicTitle = mi.Title
 
 	//var format beep.Format
 	streamer, format, err := mp3.Decode(f)
@@ -173,7 +160,7 @@ func (p *Player) loadWaveform(path string) {
 	}
 	var data []byte
 	row.Scan(&data)
-	p.musicInfo.Waveform = data
+	p.nowPlaying.Waveform = data
 }
 
 /////////////////////////////////////////////////////
@@ -188,9 +175,9 @@ func (p *Player) Start() {
 			// from remote controller
 			// after load music
 			if p.ctrl != nil {
-				p.turntable.musicTitle.SetText(p.musicTitle)
+				p.turntable.musicTitle.SetText(p.nowPlaying.Title)
 				p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
-				p.turntable.waveformPanel.update(p.musicInfo.Waveform, p.streamer.Position())
+				p.turntable.waveformPanel.update(p.nowPlaying.Waveform, p.streamer.Position())
 				p.turntable.meterBox.update(int((p.volume.Volume+1)*100), int(p.resampler.Ratio()*100))
 			}
 

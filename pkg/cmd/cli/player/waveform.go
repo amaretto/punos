@@ -2,8 +2,6 @@ package player
 
 import (
 	"strings"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const logo = `
