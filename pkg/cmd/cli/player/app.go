@@ -58,7 +58,8 @@ type Player struct {
 // New return App instance
 func New(confPath string) *Player {
 
-	conf, err := config.LoadConfig(confPath)
+	//ToDo: fix it
+	_, err := config.LoadConfig(confPath)
 	if err != nil {
 		report(err)
 	}
