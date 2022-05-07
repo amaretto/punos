@@ -201,7 +201,6 @@ func (p *Player) Rewind() {
 
 // Cue set and return cue point
 func (p *Player) Cue() {
-	// ToDo : adopt multiple cue point
 	if p.ctrl.Paused {
 		speaker.Lock()
 		p.cuePoint = p.streamer.Position()

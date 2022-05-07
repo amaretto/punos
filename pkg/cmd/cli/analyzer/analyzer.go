@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"time"
 
-	// ToDo: fix after merge branch
 	"github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/amaretto/waveform/pkg/waveform"
 	"github.com/benjojo/bpm"
@@ -44,7 +43,6 @@ func (a *Analyzer) AnalyzeMusic(musicInfo *model.MusicInfo) {
 	}
 	wvfm.MusicTitle = musicInfo.Title
 
-	// ToDo: analyze music info
 	err = a.analyzeMusicInfo(musicInfo)
 	if err != nil {
 		logrus.Debug(err)
@@ -152,6 +150,7 @@ func (a *Analyzer) listMusic(path string) []string {
 	return list
 }
 
+//ToDo: move to model
 func registerMusicInfo(musicInfo *model.MusicInfo) {
 	dbPath := "mp3/test.db"
 
@@ -168,6 +167,7 @@ func registerMusicInfo(musicInfo *model.MusicInfo) {
 	}
 }
 
+//ToDo: move to model
 func registerWaveform(w *waveform.Waveform) {
 	dbPath := "mp3/test.db"
 

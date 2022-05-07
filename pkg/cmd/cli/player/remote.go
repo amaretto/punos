@@ -12,7 +12,6 @@ import (
 )
 
 func setupRemoteControl(p Player) {
-	// ToDo : separate method
 	address := "localhost:19003"
 	// create gRPC Client
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
@@ -24,7 +23,6 @@ func setupRemoteControl(p Player) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// ToDo : register turn table
 	var flag bool
 	r, err := c.RegistTT(ctx, &pb.TTRegistRequest{Id: p.playerID})
 	if err != nil {
@@ -37,7 +35,6 @@ func setupRemoteControl(p Player) {
 		logrus.Debugf("Register turntable %s failed!\n", p.playerID)
 	}
 
-	// ToDo : getTTCmd
 	req := &pb.GetTTCmdRequest{Id: p.playerID}
 	stream, err := c.GetTTCmd(context.Background(), req)
 	if err != nil {

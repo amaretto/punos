@@ -31,7 +31,7 @@ func cleanUp(confPath string) error {
 func TestLoadConfig(t *testing.T) {
 	// ToDo: create files for testing
 	for _, testCase := range configTestCases {
-		result, err := loadConfig(testCase.Path)
+		result, err := LoadConfig(testCase.Path)
 		if err != testCase.Result {
 			t.Errorf("invalid result. testCase:%v, actual:%v", testCase, result)
 		}
