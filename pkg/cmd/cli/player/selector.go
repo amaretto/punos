@@ -1,9 +1,6 @@
 package player
 
 import (
-	"os"
-	"regexp"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -69,27 +66,6 @@ func (s *Selector) update() {
 	}
 }
 
-func contains(path string, list []string) bool {
-	for _, s := range list {
-		if s == path {
-			return true
-		}
-	}
-	return false
-}
-
-func del(path string, list []string) []string {
-	for i, s := range list {
-		if s == path {
-			if i < len(list)-1 {
-				return append(list[:i], list[i+1:]...)
-			}
-			return list[:i]
-		}
-	}
-	return list
-}
-
 // SetKeyHandler is
 func (s *Selector) SetKeyHandler() {
 	s.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
@@ -107,18 +83,4 @@ func (s *Selector) SetKeyHandler() {
 		}
 		return e
 	})
-}
-
-func (s *Selector) listMusic(musicPath string) []string {
-	r := regexp.MustCompile(`.*mp3`)
-	cd, _ := os.Getwd()
-	fileInfos, _ := os.ReadDir(cd + "/mp3")
-	var list []string
-	for _, fileInfo := range fileInfos {
-		if !r.MatchString(fileInfo.Name()) {
-			continue
-		}
-		list = append(list, cd+"/mp3/"+fileInfo.Name())
-	}
-	return list
 }
