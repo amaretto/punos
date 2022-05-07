@@ -4,11 +4,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/amaretto/punos/pkg/cmd/cli/config"
-	"github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 )
 
 // Selector is panel for selecting music
@@ -18,8 +15,6 @@ type Selector struct {
 
 	musicListView *tview.Table
 	musicDetail   *DefaultView
-	// ToDo: move to controller
-	musicList *model.Musics
 }
 
 func newSelector(player *Player) *Selector {
@@ -53,14 +48,7 @@ func newSelector(player *Player) *Selector {
 		})
 	}
 
-	//ToDo: move to controller
-	//ToDo: delete dummy
-	cd, _ := os.Getwd()
-	dummyConf := &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}
-	s.musicList = model.NewMusics(dummyConf)
-	s.musicList.Load()
-
-	for i, musicInfo := range s.musicList.List {
+	for i, musicInfo := range s.player.musics.List {
 		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 2, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
@@ -110,8 +98,7 @@ func (s *Selector) SetKeyHandler() {
 	s.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Rune() {
 		case 'a':
-			logrus.Debug(s.musicList)
-			for _, m := range s.musicList.List {
+			for _, m := range s.player.musics.List {
 				if m.Status == "Not Analyzed" {
 					s.player.analyzer.AnalyzeMusic(m)
 				}
@@ -119,7 +106,7 @@ func (s *Selector) SetKeyHandler() {
 		case 'l':
 			// load music
 			row, _ := s.musicListView.GetSelection()
-			s.player.LoadMusic(s.musicList.List[row-1])
+			s.player.LoadMusic(s.player.musics.List[row-1])
 		}
 		return e
 	})
