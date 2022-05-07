@@ -70,7 +70,6 @@ func New(confPath string) *Player {
 	p.pages.AddPage("turntable", p.turntable, true, true)
 	p.pages.SwitchToPage("turntable")
 
-	//ToDo: fix it
 	//ToDo: delete dummy
 	cd, _ := os.Getwd()
 	dummyConf := &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}

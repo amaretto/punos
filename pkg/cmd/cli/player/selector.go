@@ -36,7 +36,6 @@ func newSelector(player *Player) *Selector {
 		"Duration",
 		"BPM",
 	}
-
 	for i, header := range headers {
 		s.musicListView.SetCell(0, i, &tview.TableCell{
 			Text:            header,
@@ -48,6 +47,17 @@ func newSelector(player *Player) *Selector {
 		})
 	}
 
+	s.musicListView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle("MusicList")
+	s.SetDirection(tview.FlexRow).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+			AddItem(s.musicListView, 0, 4, false),
+			0, 1, false)
+	s.SetKeyHandler()
+	s.update()
+	return s
+}
+
+func (s *Selector) update() {
 	for i, musicInfo := range s.player.musics.List {
 		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
@@ -56,20 +66,6 @@ func newSelector(player *Player) *Selector {
 		s.musicListView.SetCell(i+1, 4, tview.NewTableCell(musicInfo.Duration).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 5, tview.NewTableCell(musicInfo.BPM).SetMaxWidth(1).SetExpansion(1))
 	}
-
-	s.musicListView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle("MusicList")
-
-	s.SetDirection(tview.FlexRow).
-		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-			AddItem(s.musicListView, 0, 4, false),
-			0, 1, false)
-
-	s.SetKeyHandler()
-	return s
-}
-
-func (s *Selector) update() {
-
 }
 
 func contains(path string, list []string) bool {
