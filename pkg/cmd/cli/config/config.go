@@ -14,7 +14,7 @@ type Config struct {
 	DBPath    string `yaml:"dbPath"`
 }
 
-func LoadConfig(confPath string) (Config, error) {
+func LoadConfig(confPath string) (*Config, error) {
 	conf := Config{}
 	// rename current dir
 	usr, _ := user.Current()
@@ -25,7 +25,7 @@ func LoadConfig(confPath string) (Config, error) {
 	// check existance dir & file
 	if _, err := os.Stat(confPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(confPath, 0755); err != nil {
-			return conf, err
+			return &conf, err
 		}
 	}
 	if _, err := os.Stat(confPath + "/conf.yaml"); os.IsNotExist(err) {
@@ -35,13 +35,13 @@ func LoadConfig(confPath string) (Config, error) {
 	// load conf
 	bytes, err := ioutil.ReadFile(confPath + "/conf.yaml")
 	if err != nil {
-		return conf, err
+		return &conf, err
 	}
 	err = yaml.Unmarshal([]byte(bytes), &conf)
 	if err != nil {
-		return conf, err
+		return &conf, err
 	}
-	return conf, nil
+	return &conf, nil
 }
 
 func CreateDefaultFile(confPath string) error {

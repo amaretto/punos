@@ -117,7 +117,6 @@ func del(path string, list []string) []string {
 	return list
 }
 
-// ToDo: Implement
 func (m Musics) LoadWaveform(mi *MusicInfo) {
 	cmd := "SELECT wave FROM waveform WHERE path = ?"
 

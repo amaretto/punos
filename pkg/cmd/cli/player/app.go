@@ -22,6 +22,10 @@ import (
 type Player struct {
 	app      *tview.Application
 	playerID string
+
+	// Config
+	config *config.Config
+
 	// Analyzer
 	analyzer *analyzer.Analyzer
 
@@ -47,13 +51,6 @@ type Player struct {
 
 // New return App instance
 func New(confPath string) *Player {
-
-	//ToDo: load config
-	_, err := config.LoadConfig(confPath)
-	if err != nil {
-		report(err)
-	}
-
 	// init player
 	p := &Player{
 		app:        tview.NewApplication(),
@@ -67,10 +64,17 @@ func New(confPath string) *Player {
 	p.pages.AddPage("turntable", p.turntable, true, true)
 	p.pages.SwitchToPage("turntable")
 
+	// load config
+	var err error
+	p.config, err = config.LoadConfig(confPath)
+	if err != nil {
+		report(err)
+	}
+
 	//ToDo: delete dummy
 	cd, _ := os.Getwd()
-	dummyConf := &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}
-	p.musics = model.NewMusics(dummyConf)
+	p.config = &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}
+	p.musics = model.NewMusics(p.config)
 	p.musics.Load()
 
 	p.selector = newSelector(p)
