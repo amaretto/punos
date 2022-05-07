@@ -53,6 +53,7 @@ func newSelector(player *Player) *Selector {
 			AddItem(s.musicListView, 0, 4, false),
 			0, 1, false)
 	s.SetKeyHandler()
+
 	s.update()
 	return s
 }

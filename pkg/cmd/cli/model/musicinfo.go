@@ -47,6 +47,7 @@ func (m *Musics) Load() {
 		report(err)
 	}
 
+	m.List = []*MusicInfo{}
 	// retrieve data from DB
 	for rows.Next() {
 		mi := &MusicInfo{}

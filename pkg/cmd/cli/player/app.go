@@ -102,6 +102,8 @@ func (p *Player) setAppGlobalKeyBinding() {
 			p.ctrl.Paused = !p.ctrl.Paused
 			speaker.Unlock()
 		case 's':
+			p.musics.Load()
+			p.selector.update()
 			p.pages.SwitchToPage("selector")
 			p.app.SetFocus(p.selector.musicListView)
 		case 't':
@@ -169,11 +171,7 @@ func (p *Player) loadWaveform(path string) {
 	p.nowPlaying.Waveform = data
 }
 
-/////////////////////////////////////////////////////
-//////////////////// Control ////////////////////////
-/////////////////////////////////////////////////////
 func (p *Player) Start() {
-
 	go func() {
 		for {
 			p.app.Draw()
