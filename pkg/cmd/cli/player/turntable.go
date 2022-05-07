@@ -46,9 +46,6 @@ func newTurntable(app *Player) *Turntable {
 			AddItem(t.meterBox, 0, 7, false), 0, 4, false)
 
 	t.initTurntable()
-
-	// kick update()
-
 	return t
 }
 
@@ -57,6 +54,14 @@ func (t *Turntable) initTurntable() {
 	t.djName.SetText(t.app.playerID)
 	t.turntableID.SetText("TurnTable")
 	t.SetKeyHandler()
+}
+
+func (t *Turntable) update() {
+	t.musicTitle.SetText(t.app.nowPlaying.Title)
+	t.progressBar.update(t.app.streamer.Position(), t.app.streamer.Len())
+	t.waveformPanel.update(t.app.nowPlaying.Waveform, t.app.streamer.Position())
+	t.meterBox.update(int((t.app.volume.Volume+1)*100), int(t.app.resampler.Ratio()*100))
+	// ToDo: update PlayPause
 }
 
 func (t *Turntable) SetKeyHandler() {
@@ -79,13 +84,4 @@ func (t *Turntable) SetKeyHandler() {
 		}
 		return e
 	})
-}
-
-func (t *Turntable) update() {
-	// ToDo: get music info from app
-	// ToDo: update music title
-	// ToDo: update progress bar
-	// ToDo: update Waveform
-	// ToDo: update PlayPause
-	// ToDo: update Meters
 }

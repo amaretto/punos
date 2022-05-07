@@ -176,13 +176,13 @@ func (p *Player) Start() {
 		for {
 			p.app.Draw()
 			time.Sleep(10 * time.Millisecond)
-			// from remote controller
 			// after load music
 			if p.ctrl != nil {
-				p.turntable.musicTitle.SetText(p.nowPlaying.Title)
-				p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
-				p.turntable.waveformPanel.update(p.nowPlaying.Waveform, p.streamer.Position())
-				p.turntable.meterBox.update(int((p.volume.Volume+1)*100), int(p.resampler.Ratio()*100))
+				p.turntable.update()
+				//p.turntable.musicTitle.SetText(p.nowPlaying.Title)
+				//p.turntable.progressBar.update(p.streamer.Position(), p.streamer.Len())
+				//p.turntable.waveformPanel.update(p.nowPlaying.Waveform, p.streamer.Position())
+				//p.turntable.meterBox.update(int((p.volume.Volume+1)*100), int(p.resampler.Ratio()*100))
 			}
 
 		}
