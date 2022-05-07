@@ -118,13 +118,13 @@ func del(path string, list []string) []string {
 }
 
 // ToDo: Implement
-func (m *Musics) GetMusics(path string) *Musics {
-	return nil
-}
+func (m Musics) LoadWaveform(mi *MusicInfo) {
+	cmd := "SELECT wave FROM waveform WHERE path = ?"
 
-// ToDo: Implement
-func (m *Musics) loadWaveform(path string) {
-
+	row := m.DB.QueryRow(cmd, filepath.Base(mi.Path))
+	var data []byte
+	row.Scan(&data)
+	mi.Waveform = data
 }
 
 const SampleInterval = 800

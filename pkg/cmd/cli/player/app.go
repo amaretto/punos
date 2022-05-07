@@ -1,11 +1,8 @@
 package player
 
 import (
-	"database/sql"
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -146,29 +143,9 @@ func (p *Player) LoadMusic(mi *model.MusicInfo) {
 	p.ctrl.Paused = !p.ctrl.Paused
 	speaker.Unlock()
 
-	p.loadWaveform(mi.Path)
+	p.musics.LoadWaveform(mi)
 	p.pages.SwitchToPage("turntable")
 	p.app.SetFocus(p.turntable.waveformPanel)
-}
-
-func (p *Player) loadWaveform(path string) {
-	dbPath := "mp3/test.db"
-
-	db, err := sql.Open("sqlite3", dbPath)
-	defer db.Close()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	cmd := "SELECT wave FROM waveform WHERE path = ?"
-
-	row := db.QueryRow(cmd, filepath.Base(path))
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var data []byte
-	row.Scan(&data)
-	p.nowPlaying.Waveform = data
 }
 
 func (p *Player) Start() {
