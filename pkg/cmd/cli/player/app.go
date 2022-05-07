@@ -58,6 +58,7 @@ func New(confPath string) *Player {
 		nowPlaying: &model.MusicInfo{},
 		playerID:   strconv.Itoa(int(time.Now().Unix())),
 	}
+
 	// load config
 	var err error
 	p.config, err = config.LoadConfig(confPath)
