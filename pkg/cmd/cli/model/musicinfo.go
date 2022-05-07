@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/amaretto/punos/pkg/cmd/cli/config"
+	"github.com/amaretto/waveform/pkg/waveform"
 )
 
 // MusicInfo have details of mp3 files
@@ -35,13 +36,11 @@ func NewMusics(conf *config.Config) *Musics {
 	if err != nil {
 		report(err)
 	}
-	//ToDo: fix it?
-	//defer db.Close()
 	musics := &Musics{conf: conf, DB: db}
 	return musics
 }
 
-func (m *Musics) Load() {
+func (m *Musics) LoadMusics() {
 	rows, err := m.DB.Query("SELECT path, title, album, authors, duration, sampleRate, format, bpm FROM music")
 	if err != nil {
 		report(err)
@@ -60,6 +59,28 @@ func (m *Musics) Load() {
 	// check music status
 	musicPathList := listMusic(m.conf.MusicPath)
 	m.checkMusicStatus(musicPathList)
+}
+
+func (m *Musics) RegisterMusicInfo(musicInfo *MusicInfo) {
+	cmd := "INSERT INTO music(path, title, album, duration, authors, sampleRate, format, bpm) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+	_, err := m.DB.Exec(cmd, musicInfo.Path, musicInfo.Title, musicInfo.Album, musicInfo.Duration, musicInfo.Authors, musicInfo.SampleRate, musicInfo.Format, musicInfo.BPM)
+	if err != nil {
+		report(err)
+	}
+}
+
+func (m *Musics) RegisterWaveform(w *waveform.Waveform) {
+	data := make([]byte, len(w.Wave))
+	for i, n := range w.Wave {
+		data[i] = byte(n)
+	}
+
+	// ToDo: check and create databases if not exists
+	cmd := "INSERT INTO waveform values(?,?)"
+	_, err := m.DB.Exec(cmd, w.MusicTitle, data)
+	if err != nil {
+		report(err)
+	}
 }
 
 func (m *Musics) checkMusicStatus(musicPathList []string) {

@@ -1,13 +1,12 @@
 package analyzer
 
 import (
-	"database/sql"
 	"fmt"
 	"math"
 	"os"
-	"regexp"
 	"time"
 
+	"github.com/amaretto/punos/pkg/cmd/cli/config"
 	"github.com/amaretto/punos/pkg/cmd/cli/model"
 	"github.com/amaretto/waveform/pkg/waveform"
 	"github.com/benjojo/bpm"
@@ -21,12 +20,14 @@ import (
 type Analyzer struct {
 	sampleRate beep.SampleRate
 	wvfmr      *waveform.Waveformer
+	musics     *model.Musics
 }
 
-func NewAnalyzer(sampleRate beep.SampleRate) *Analyzer {
+func NewAnalyzer(conf *config.Config, sampleRate beep.SampleRate) *Analyzer {
 	a := &Analyzer{
 		sampleRate: sampleRate,
 		wvfmr:      waveform.NewWaveformer(),
+		musics:     model.NewMusics(conf),
 	}
 	return a
 }
@@ -51,8 +52,10 @@ func (a *Analyzer) AnalyzeMusic(musicInfo *model.MusicInfo) {
 
 	// set sqlite
 	logrus.Debug("start create and register waveform:", musicInfo.Path)
-	registerMusicInfo(musicInfo)
-	registerWaveform(wvfm)
+	a.musics.RegisterMusicInfo(musicInfo)
+	a.musics.RegisterWaveform(wvfm)
+	//registerMusicInfo(musicInfo)
+	//registerWaveform(wvfm)
 	logrus.Debug("finish create and register waveform")
 
 	return
@@ -136,62 +139,6 @@ func (a *Analyzer) detectBPM(streamer beep.StreamSeeker) float64 {
 	return bpms[len(bpms)/2]
 }
 
-func (a *Analyzer) listMusic(path string) []string {
-	r := regexp.MustCompile(`.*mp3`)
-	cd, _ := os.Getwd()
-	fileInfos, _ := os.ReadDir(cd + "/mp3")
-	var list []string
-	for _, fileInfo := range fileInfos {
-		if !r.MatchString(fileInfo.Name()) {
-			continue
-		}
-		list = append(list, cd+"/mp3/"+fileInfo.Name())
-	}
-	return list
-}
-
-//ToDo: move to model
-func registerMusicInfo(musicInfo *model.MusicInfo) {
-	dbPath := "mp3/test.db"
-
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		logrus.Debug(err)
-		report(err)
-	}
-	cmd := "INSERT INTO music(path, title, album, duration, authors, sampleRate, format, bpm) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err = db.Exec(cmd, musicInfo.Path, musicInfo.Title, musicInfo.Album, musicInfo.Duration, musicInfo.Authors, musicInfo.SampleRate, musicInfo.Format, musicInfo.BPM)
-	if err != nil {
-		logrus.Debug(err)
-		report(err)
-	}
-}
-
-//ToDo: move to model
-func registerWaveform(w *waveform.Waveform) {
-	dbPath := "mp3/test.db"
-
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		logrus.Debug(err)
-		report(err)
-	}
-
-	data := make([]byte, len(w.Wave))
-	for i, n := range w.Wave {
-		data[i] = byte(n)
-	}
-
-	// ToDo: check and create databases if not exists
-	cmd := "INSERT INTO waveform values(?,?)"
-	_, err = db.Exec(cmd, w.MusicTitle, data)
-	if err != nil {
-		logrus.Debug(err)
-		report(err)
-	}
-}
-
-//ToDo: fix it
 func report(err error) {
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)

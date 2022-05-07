@@ -74,6 +74,7 @@ func (s *Selector) SetKeyHandler() {
 					s.player.analyzer.AnalyzeMusic(m)
 				}
 			}
+			s.update()
 		case 'l':
 			// load music
 			row, _ := s.musicListView.GetSelection()

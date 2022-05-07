@@ -58,12 +58,6 @@ func New(confPath string) *Player {
 		nowPlaying: &model.MusicInfo{},
 		playerID:   strconv.Itoa(int(time.Now().Unix())),
 	}
-
-	p.analyzer = analyzer.NewAnalyzer(p.sampleRate)
-	p.turntable = newTurntable(p)
-	p.pages.AddPage("turntable", p.turntable, true, true)
-	p.pages.SwitchToPage("turntable")
-
 	// load config
 	var err error
 	p.config, err = config.LoadConfig(confPath)
@@ -71,11 +65,15 @@ func New(confPath string) *Player {
 		report(err)
 	}
 
+	p.turntable = newTurntable(p)
+	p.pages.AddPage("turntable", p.turntable, true, true)
+	p.pages.SwitchToPage("turntable")
+
 	//ToDo: delete dummy
 	cd, _ := os.Getwd()
 	p.config = &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}
 	p.musics = model.NewMusics(p.config)
-	p.musics.Load()
+	p.musics.LoadMusics()
 
 	p.selector = newSelector(p)
 	p.pages.AddPage("selector", p.selector, true, false)
@@ -87,6 +85,8 @@ func New(confPath string) *Player {
 	p.sampleRate = 44100
 	speaker.Init(p.sampleRate, int(time.Duration(p.sampleRate)*(time.Second/30)/time.Second))
 
+	// analyzer
+	p.analyzer = analyzer.NewAnalyzer(p.config, p.sampleRate)
 	return p
 }
 
@@ -103,7 +103,7 @@ func (p *Player) setAppGlobalKeyBinding() {
 			p.ctrl.Paused = !p.ctrl.Paused
 			speaker.Unlock()
 		case 's':
-			p.musics.Load()
+			p.musics.LoadMusics()
 			p.selector.update()
 			p.pages.SwitchToPage("selector")
 			p.app.SetFocus(p.selector.musicListView)
