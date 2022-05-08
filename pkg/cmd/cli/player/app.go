@@ -68,8 +68,6 @@ func New(confPath string) *Player {
 
 	p.turntable = newTurntable(p)
 	p.pages.AddPage("turntable", p.turntable, true, true)
-	p.pages.AddPage("turntableHelp", p.turntable.helpModal, true, true)
-	//p.pages.SwitchToPage("turntable")
 
 	//ToDo: delete dummy
 	cd, _ := os.Getwd()

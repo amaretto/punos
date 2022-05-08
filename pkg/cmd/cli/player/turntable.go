@@ -3,7 +3,6 @@ package player
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 )
 
 // Turntable give some functions of music player
@@ -67,14 +66,57 @@ func newHelpModal() tview.Primitive {
 			AddItem(nil, 0, 1, false).
 			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 				AddItem(nil, 0, 1, false).
-				AddItem(p, height, 1, false).
+				AddItem(p, height, 1, true).
 				AddItem(nil, 0, 1, false), width, 1, false).
 			AddItem(nil, 0, 1, false)
 	}
-	box := tview.NewBox().
-		SetBorder(true).
-		SetTitle("Centered Box")
-	return modal(box, 40, 10)
+
+	rows, cols := 10, 2
+	keyBindingHelp := [][]string{
+		{"Key", "Description"},
+		{"Space", "Play/Pause"},
+		{"Esc", "Quit"},
+		{"l", "Fast Forward"},
+		{"h", "Rewind"},
+		{"j", "Volume Up"},
+		{"k", "Volume Down"},
+		{"m", "Speed Up"},
+		{",", "Speed Down"},
+		{"c", "Set/Jump Cue"},
+	}
+
+	table := tview.NewTable().
+		SetBorders(true)
+
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			color := tcell.ColorWhite
+			if c < 1 || r < 1 {
+				color = tcell.ColorYellow
+			}
+			table.SetCell(r, c,
+				tview.NewTableCell(keyBindingHelp[r][c]).
+					SetTextColor(color).
+					SetAlign(tview.AlignCenter))
+		}
+	}
+
+	return modal(table, calcWidth(keyBindingHelp), len(keyBindingHelp)*2+1)
+}
+
+// for resize width
+func calcWidth(table [][]string) int {
+	var maxKeyLen, maxDescLen int
+	for i := 0; i < len(table); i++ {
+		if len(table[i][0]) > maxKeyLen {
+			maxKeyLen = len(table[i][0])
+		}
+		if len(table[i][1]) > maxDescLen {
+			maxDescLen = len(table[i][1])
+		}
+	}
+	// 3 = boarder count
+	return maxKeyLen + maxDescLen + 3
 }
 
 func (t *Turntable) update() {
@@ -88,8 +130,6 @@ func (t *Turntable) update() {
 func (t *Turntable) SetKeyHandler() {
 	t.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
 		switch e.Rune() {
-		case 'a':
-			logrus.Debug("hogehoge")
 		case 'l':
 			t.app.Fforward()
 		case 'h':
