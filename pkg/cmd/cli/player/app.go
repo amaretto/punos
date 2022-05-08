@@ -68,7 +68,8 @@ func New(confPath string) *Player {
 
 	p.turntable = newTurntable(p)
 	p.pages.AddPage("turntable", p.turntable, true, true)
-	p.pages.SwitchToPage("turntable")
+	p.pages.AddPage("turntableHelp", p.turntable.helpModal, true, true)
+	//p.pages.SwitchToPage("turntable")
 
 	//ToDo: delete dummy
 	cd, _ := os.Getwd()
@@ -78,6 +79,8 @@ func New(confPath string) *Player {
 
 	p.selector = newSelector(p)
 	p.pages.AddPage("selector", p.selector, true, false)
+
+	p.pages.SendToFront("turntable")
 
 	p.setAppGlobalKeyBinding()
 
@@ -111,6 +114,12 @@ func (p *Player) setAppGlobalKeyBinding() {
 		case 't':
 			p.pages.SwitchToPage("turntable")
 			p.app.SetFocus(p.turntable.waveformPanel)
+		case '?':
+			if name, _ := p.pages.GetFrontPage(); name == "turntable" {
+				p.pages.AddPage("turntableHelp", p.turntable.helpModal, true, true)
+			} else if name == "turntableHelp" {
+				p.pages.RemovePage("turntableHelp")
+			}
 		}
 		return event
 	})

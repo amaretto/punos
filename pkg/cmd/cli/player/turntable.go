@@ -8,8 +8,11 @@ import (
 
 // Turntable give some functions of music player
 type Turntable struct {
-	*tview.Flex
 	app *Player
+
+	*tview.Flex
+	helpModal    tview.Primitive
+	isHelpActive bool
 
 	djName        *DefaultView
 	turntableID   *DefaultView
@@ -22,8 +25,10 @@ type Turntable struct {
 
 func newTurntable(app *Player) *Turntable {
 	t := &Turntable{
-		app:  app,
-		Flex: tview.NewFlex(),
+		app: app,
+
+		Flex:      tview.NewFlex(),
+		helpModal: newHelpModal(),
 
 		djName:        NewDefaultView("DJ"),
 		turntableID:   NewDefaultView("TurnTable"),
@@ -54,6 +59,22 @@ func (t *Turntable) initTurntable() {
 	t.djName.SetText(t.app.playerID)
 	t.turntableID.SetText("TurnTable")
 	t.SetKeyHandler()
+}
+
+func newHelpModal() tview.Primitive {
+	modal := func(p tview.Primitive, width, height int) tview.Primitive {
+		return tview.NewFlex().
+			AddItem(nil, 0, 1, false).
+			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+				AddItem(nil, 0, 1, false).
+				AddItem(p, height, 1, false).
+				AddItem(nil, 0, 1, false), width, 1, false).
+			AddItem(nil, 0, 1, false)
+	}
+	box := tview.NewBox().
+		SetBorder(true).
+		SetTitle("Centered Box")
+	return modal(box, 40, 10)
 }
 
 func (t *Turntable) update() {

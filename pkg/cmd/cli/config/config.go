@@ -63,7 +63,6 @@ func LoadConfig(confPath string) (*Config, error) {
 	}
 
 	//ToDo: create db if it doesn't exist
-
 	return &conf, nil
 }
 
