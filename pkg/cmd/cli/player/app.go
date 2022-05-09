@@ -72,7 +72,7 @@ func New() *Player {
 
 	//ToDo: delete dummy
 	cd, _ := os.Getwd()
-	p.config = &config.Config{MusicPath: cd + "/mp3", DBPath: "mp3/test.db"}
+	p.config = &config.Config{MusicPath: cd + "/mp3", DBPath: p.config.DBPath}
 	p.musics = model.NewMusics(p.config)
 	p.musics.LoadMusics()
 

@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/amaretto/punos/pkg/cmd/cli/config"
 	"github.com/amaretto/waveform/pkg/waveform"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // MusicInfo have details of mp3 files
@@ -32,21 +35,31 @@ type Musics struct {
 }
 
 func NewMusics(conf *config.Config) *Musics {
+	if strings.HasPrefix(conf.DBPath, "~") {
+		usr, _ := user.Current()
+		conf.DBPath = strings.Replace(conf.DBPath, "~", usr.HomeDir, 1)
+	}
 	db, err := sql.Open("sqlite3", conf.DBPath)
 	if err != nil {
 		report(err)
 	}
-	// ToDo: check and create databases if not exists
 
 	musics := &Musics{conf: conf, DB: db}
+	musics.initDB()
 	return musics
 }
 
-func checkDB() bool {
-	return false
-}
-
-func initDB() {
+func (m *Musics) initDB() {
+	//music
+	_, err := m.DB.Exec("CREATE TABLE IF NOT EXISTS music(path text PRIMARY KEY, title text, album text, duration text, authors text, sampleRate integer, format text, bpm[interger] DEFAULT 100)")
+	if err != nil {
+		report(err)
+	}
+	//waveform
+	_, err = m.DB.Exec("CREATE TABLE IF NOT EXISTS waveform(path text PRIMARY KEY, wave blob)")
+	if err != nil {
+		report(err)
+	}
 
 }
 
@@ -157,11 +170,6 @@ func (m Musics) LoadWaveform(mi *MusicInfo) {
 }
 
 const SampleInterval = 800
-
-// ToDo: Implement
-func initDB(confPath string) error {
-	return nil
-}
 
 func (m *MusicInfo) getWaveStr(pos, width, height int) []string {
 	return m.wave2str(m.getWave(pos, SampleInterval, width), height)
