@@ -36,8 +36,18 @@ func NewMusics(conf *config.Config) *Musics {
 	if err != nil {
 		report(err)
 	}
+	// ToDo: check and create databases if not exists
+
 	musics := &Musics{conf: conf, DB: db}
 	return musics
+}
+
+func checkDB() bool {
+	return false
+}
+
+func initDB() {
+
 }
 
 func (m *Musics) LoadMusics() {
@@ -75,7 +85,6 @@ func (m *Musics) RegisterWaveform(w *waveform.Waveform) {
 		data[i] = byte(n)
 	}
 
-	// ToDo: check and create databases if not exists
 	cmd := "INSERT INTO waveform values(?,?)"
 	_, err := m.DB.Exec(cmd, w.MusicTitle, data)
 	if err != nil {

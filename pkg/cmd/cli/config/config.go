@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -27,22 +26,6 @@ func LoadConfig(confPath string) (*Config, error) {
 	_, dirErr := os.Stat(confPath)
 	_, fileErr := os.Stat(confPath + "/conf.yaml")
 
-	if os.IsNotExist(dirErr) || os.IsNotExist(fileErr) {
-		fmt.Printf("Thank you for playing punos! \n")
-		fmt.Printf("It seems that there is no conf/db files. Is it ok to create these files in %s? [y/N]:", confPath)
-		var choise string
-		for {
-			fmt.Scanf("%s", &choise)
-			if choise == "y" {
-				break
-			} else if choise == "N" {
-				os.Exit(0)
-			} else {
-				fmt.Printf("Is it ok to create : %s/conf.yaml?[y/N]\n", confPath)
-			}
-		}
-	}
-
 	if os.IsNotExist(dirErr) {
 		if err := os.MkdirAll(confPath, 0755); err != nil {
 			return &conf, err
@@ -62,7 +45,6 @@ func LoadConfig(confPath string) (*Config, error) {
 		return &conf, err
 	}
 
-	//ToDo: create db if it doesn't exist
 	return &conf, nil
 }
 
@@ -74,8 +56,7 @@ func CreateDefaultFile(confPath string) error {
 	defer fp.Close()
 
 	// create template if need
-	raw := `musicPath: .
-dbPath: ~/.punos/punos.db`
+	raw := `dbPath: ~/.punos/punos.db`
 
 	fp.WriteString(raw)
 	return nil

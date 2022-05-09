@@ -50,7 +50,7 @@ type Player struct {
 }
 
 // New return App instance
-func New(confPath string) *Player {
+func New() *Player {
 	// init player
 	p := &Player{
 		app:        tview.NewApplication(),
@@ -61,6 +61,7 @@ func New(confPath string) *Player {
 
 	// load config
 	var err error
+	confPath := "~/.punos"
 	p.config, err = config.LoadConfig(confPath)
 	if err != nil {
 		report(err)
