@@ -117,6 +117,10 @@ func (p *Player) setAppGlobalKeyBinding() {
 				p.pages.AddPage("turntableHelp", p.turntable.helpModal, true, true)
 			} else if name == "turntableHelp" {
 				p.pages.RemovePage("turntableHelp")
+			} else if name == "selector" {
+				p.pages.AddPage("selectorHelp", p.selector.helpModal, true, true)
+			} else if name == "selectorHelp" {
+				p.pages.RemovePage("selectorHelp")
 			}
 		}
 		return event

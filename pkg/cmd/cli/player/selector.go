@@ -8,6 +8,8 @@ import (
 // Selector is panel for selecting music
 type Selector struct {
 	*tview.Flex
+	helpModal tview.Primitive
+
 	player *Player
 
 	musicListView *tview.Table
@@ -41,6 +43,16 @@ func newSelector(player *Player) *Selector {
 			Attributes:      tcell.AttrBold,
 		})
 	}
+
+	keyBindingHelp := [][]string{
+		{"Key", "Description"},
+		{"Esc", "Quit"},
+		{"l", "LoadMusic"},
+		{"j", "Down Cursor"},
+		{"k", "Up Cursor"},
+		{"a", "Analyze All Music"},
+	}
+	s.helpModal = newHelpModal(keyBindingHelp)
 
 	s.musicListView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle("MusicList")
 	s.SetDirection(tview.FlexRow).

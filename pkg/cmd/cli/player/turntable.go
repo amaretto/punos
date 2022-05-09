@@ -7,11 +7,10 @@ import (
 
 // Turntable give some functions of music player
 type Turntable struct {
-	app *Player
-
 	*tview.Flex
-	helpModal    tview.Primitive
-	isHelpActive bool
+	helpModal tview.Primitive
+
+	app *Player
 
 	djName        *DefaultView
 	turntableID   *DefaultView
@@ -26,8 +25,8 @@ func newTurntable(app *Player) *Turntable {
 	t := &Turntable{
 		app: app,
 
-		Flex:      tview.NewFlex(),
-		helpModal: newHelpModal(),
+		Flex: tview.NewFlex(),
+		//		helpModal: newHelpModal(keyBindingHelp),
 
 		djName:        NewDefaultView("DJ"),
 		turntableID:   NewDefaultView("TurnTable"),
@@ -49,29 +48,6 @@ func newTurntable(app *Player) *Turntable {
 			AddItem(t.playPauseBox, 0, 3, false).
 			AddItem(t.meterBox, 0, 7, false), 0, 4, false)
 
-	t.initTurntable()
-	return t
-}
-
-func (t *Turntable) initTurntable() {
-	// ToDo: set dj name and turntable from configuration or arguments
-	t.djName.SetText(t.app.playerID)
-	t.turntableID.SetText("TurnTable")
-	t.SetKeyHandler()
-}
-
-func newHelpModal() tview.Primitive {
-	modal := func(p tview.Primitive, width, height int) tview.Primitive {
-		return tview.NewFlex().
-			AddItem(nil, 0, 1, false).
-			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
-				AddItem(nil, 0, 1, false).
-				AddItem(p, height, 1, true).
-				AddItem(nil, 0, 1, false), width, 1, false).
-			AddItem(nil, 0, 1, false)
-	}
-
-	rows, cols := 10, 2
 	keyBindingHelp := [][]string{
 		{"Key", "Description"},
 		{"Space", "Play/Pause"},
@@ -84,39 +60,17 @@ func newHelpModal() tview.Primitive {
 		{",", "Speed Down"},
 		{"c", "Set/Jump Cue"},
 	}
+	t.helpModal = newHelpModal(keyBindingHelp)
 
-	table := tview.NewTable().
-		SetBorders(true)
-
-	for r := 0; r < rows; r++ {
-		for c := 0; c < cols; c++ {
-			color := tcell.ColorWhite
-			if c < 1 || r < 1 {
-				color = tcell.ColorYellow
-			}
-			table.SetCell(r, c,
-				tview.NewTableCell(keyBindingHelp[r][c]).
-					SetTextColor(color).
-					SetAlign(tview.AlignCenter))
-		}
-	}
-
-	return modal(table, calcWidth(keyBindingHelp), len(keyBindingHelp)*2+1)
+	t.initTurntable()
+	return t
 }
 
-// for resize width
-func calcWidth(table [][]string) int {
-	var maxKeyLen, maxDescLen int
-	for i := 0; i < len(table); i++ {
-		if len(table[i][0]) > maxKeyLen {
-			maxKeyLen = len(table[i][0])
-		}
-		if len(table[i][1]) > maxDescLen {
-			maxDescLen = len(table[i][1])
-		}
-	}
-	// 3 = boarder count
-	return maxKeyLen + maxDescLen + 3
+func (t *Turntable) initTurntable() {
+	// ToDo: set dj name and turntable from configuration or arguments
+	t.djName.SetText(t.app.playerID)
+	t.turntableID.SetText("TurnTable")
+	t.SetKeyHandler()
 }
 
 func (t *Turntable) update() {
