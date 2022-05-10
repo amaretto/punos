@@ -45,6 +45,12 @@ func LoadConfig(confPath string) (*Config, error) {
 		return &conf, err
 	}
 
+	// update path starting from HOME dir
+	if strings.HasPrefix(conf.DBPath, "~") {
+		usr, _ := user.Current()
+		conf.DBPath = strings.Replace(conf.DBPath, "~", usr.HomeDir, 1)
+	}
+
 	return &conf, nil
 }
 

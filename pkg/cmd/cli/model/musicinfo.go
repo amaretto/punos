@@ -4,10 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"os/user"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/amaretto/punos/pkg/cmd/cli/config"
 	"github.com/amaretto/waveform/pkg/waveform"
@@ -35,10 +33,6 @@ type Musics struct {
 }
 
 func NewMusics(conf *config.Config) *Musics {
-	if strings.HasPrefix(conf.DBPath, "~") {
-		usr, _ := user.Current()
-		conf.DBPath = strings.Replace(conf.DBPath, "~", usr.HomeDir, 1)
-	}
 	db, err := sql.Open("sqlite3", conf.DBPath)
 	if err != nil {
 		report(err)
