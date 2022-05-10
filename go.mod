@@ -7,6 +7,7 @@ require (
 	github.com/benjojo/bpm v0.0.0-20181021194517-7b9b0c63ec95
 	github.com/dhowden/tag v0.0.0-20201120070457-d52dcb253c63
 	github.com/faiface/beep v1.0.2
+	github.com/fatih/color v1.13.0 // indirect
 	github.com/gdamore/tcell v1.4.0
 	github.com/gdamore/tcell/v2 v2.1.0
 	github.com/golang/protobuf v1.4.2

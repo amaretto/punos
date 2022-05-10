@@ -1,11 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"strings"
 
+	"github.com/fatih/color"
 	"gopkg.in/yaml.v2"
 )
 
@@ -45,10 +47,33 @@ func LoadConfig(confPath string) (*Config, error) {
 		return &conf, err
 	}
 
-	// update path starting from HOME dir
-	if strings.HasPrefix(conf.DBPath, "~") {
-		usr, _ := user.Current()
-		conf.DBPath = strings.Replace(conf.DBPath, "~", usr.HomeDir, 1)
+	conf.updateHomePath()
+
+	// If there is no MusicPath setting, ask user to set current directory as MusicPath
+	if conf.MusicPath == "" {
+		cd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		cd = color.GreenString(cd)
+
+		fmt.Printf("Thank you for playing with punos!\n\n")
+		fmt.Printf("It seems you set music directory for punos yet. \nIs it ok to set the below current dir[%s] as music path?[y/N]:\n", cd)
+
+		var choise string
+		fmt.Scanf("%s", &choise)
+		for {
+			if choise == "y" {
+				//ToDo: write conf
+				break
+			} else if choise == "N" {
+				fmt.Printf("OK. Please move to your music path or write your music path to %s\n", confPath+"/conf.yaml")
+				os.Exit(0)
+			} else {
+				fmt.Printf("Is it ok to set the below current dir[%s] as music path?[y/N]:\n", cd)
+				fmt.Scanf("%s", &choise)
+			}
+		}
 	}
 
 	return &conf, nil
@@ -66,4 +91,16 @@ func CreateDefaultFile(confPath string) error {
 
 	fp.WriteString(raw)
 	return nil
+}
+
+// update path starting from HOME dir
+func (conf *Config) updateHomePath() {
+	usr, _ := user.Current()
+	if strings.HasPrefix(conf.MusicPath, "~") {
+		conf.DBPath = strings.Replace(conf.MusicPath, "~", usr.HomeDir, 1)
+	}
+	if strings.HasPrefix(conf.DBPath, "~") {
+		conf.DBPath = strings.Replace(conf.DBPath, "~", usr.HomeDir, 1)
+	}
+	fmt.Println(conf.DBPath)
 }
