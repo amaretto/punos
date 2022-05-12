@@ -23,10 +23,11 @@ func LoadConfig(confPath string) (*Config, error) {
 	if strings.HasPrefix(confPath, "~") {
 		confPath = strings.Replace(confPath, "~", usr.HomeDir, 1)
 	}
+	confFilePath := confPath + "/conf.yaml"
 
 	// check existance dir & files
 	_, dirErr := os.Stat(confPath)
-	_, fileErr := os.Stat(confPath + "/conf.yaml")
+	_, fileErr := os.Stat(confFilePath)
 
 	if os.IsNotExist(dirErr) {
 		if err := os.MkdirAll(confPath, 0755); err != nil {
@@ -38,7 +39,7 @@ func LoadConfig(confPath string) (*Config, error) {
 	}
 
 	// load conf
-	bytes, err := ioutil.ReadFile(confPath + "/conf.yaml")
+	bytes, err := ioutil.ReadFile(confFilePath)
 	if err != nil {
 		return &conf, err
 	}
@@ -55,16 +56,21 @@ func LoadConfig(confPath string) (*Config, error) {
 		if err != nil {
 			return nil, err
 		}
-		cd = color.GreenString(cd)
 
 		fmt.Printf("Thank you for playing with punos!\n\n")
-		fmt.Printf("It seems you set music directory for punos yet. \nIs it ok to set the below current dir[%s] as music path?[y/N]:\n", cd)
+		fmt.Printf("It seems you set music directory for punos yet. \nIs it ok to set the below current dir[%s] as music path?[y/N]:\n", color.GreenString(cd))
 
 		var choise string
 		fmt.Scanf("%s", &choise)
 		for {
 			if choise == "y" {
-				//ToDo: write conf
+				conf.MusicPath = cd
+				f, err := os.OpenFile(confFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+				if err != nil {
+					return nil, err
+				}
+				enc := yaml.NewEncoder(f)
+				enc.Encode(conf)
 				break
 			} else if choise == "N" {
 				fmt.Printf("OK. Please move to your music path or write your music path to %s\n", confPath+"/conf.yaml")
