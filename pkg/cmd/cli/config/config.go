@@ -108,5 +108,4 @@ func (conf *Config) updateHomePath() {
 	if strings.HasPrefix(conf.DBPath, "~") {
 		conf.DBPath = strings.Replace(conf.DBPath, "~", usr.HomeDir, 1)
 	}
-	fmt.Println(conf.DBPath)
 }

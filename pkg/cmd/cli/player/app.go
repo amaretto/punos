@@ -71,8 +71,8 @@ func New() *Player {
 	p.pages.AddPage("turntable", p.turntable, true, true)
 
 	//ToDo: delete dummy
-	cd, _ := os.Getwd()
-	p.config = &config.Config{MusicPath: cd + "/mp3", DBPath: p.config.DBPath}
+	//cd, _ := os.Getwd()
+	//p.config = &config.Config{MusicPath: cd + "/mp3", DBPath: p.config.DBPath}
 	p.musics = model.NewMusics(p.config)
 	p.musics.LoadMusics()
 

@@ -54,8 +54,6 @@ func (a *Analyzer) AnalyzeMusic(musicInfo *model.MusicInfo) {
 	logrus.Debug("start create and register waveform:", musicInfo.Path)
 	a.musics.RegisterMusicInfo(musicInfo)
 	a.musics.RegisterWaveform(wvfm)
-	//registerMusicInfo(musicInfo)
-	//registerWaveform(wvfm)
 	logrus.Debug("finish create and register waveform")
 
 	return
