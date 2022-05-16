@@ -26,7 +26,6 @@ func newTurntable(app *Player) *Turntable {
 		app: app,
 
 		Flex: tview.NewFlex(),
-		//		helpModal: newHelpModal(keyBindingHelp),
 
 		djName:        NewDefaultView("DJ"),
 		turntableID:   NewDefaultView("TurnTable"),

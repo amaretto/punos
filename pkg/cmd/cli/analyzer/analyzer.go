@@ -42,7 +42,7 @@ func (a *Analyzer) AnalyzeMusic(musicInfo *model.MusicInfo) {
 		logrus.Debug(err)
 		report(err)
 	}
-	wvfm.MusicTitle = musicInfo.Title
+	wvfm.MusicTitle = musicInfo.Path
 
 	err = a.analyzeMusicInfo(musicInfo)
 	if err != nil {

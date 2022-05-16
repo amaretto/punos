@@ -70,11 +70,8 @@ func New() *Player {
 	p.turntable = newTurntable(p)
 	p.pages.AddPage("turntable", p.turntable, true, true)
 
-	//ToDo: delete dummy
-	//cd, _ := os.Getwd()
-	//p.config = &config.Config{MusicPath: cd + "/mp3", DBPath: p.config.DBPath}
 	p.musics = model.NewMusics(p.config)
-	p.musics.LoadMusics()
+	p.musics.ListMusics()
 
 	p.selector = newSelector(p)
 	p.pages.AddPage("selector", p.selector, true, false)
@@ -106,7 +103,8 @@ func (p *Player) setAppGlobalKeyBinding() {
 			p.ctrl.Paused = !p.ctrl.Paused
 			speaker.Unlock()
 		case 's':
-			p.musics.LoadMusics()
+			//ToDo fix
+			p.musics.ListMusics()
 			p.selector.update()
 			p.pages.SwitchToPage("selector")
 			p.app.SetFocus(p.selector.musicListView)

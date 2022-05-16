@@ -8,7 +8,8 @@ import (
 // Selector is panel for selecting music
 type Selector struct {
 	*tview.Flex
-	helpModal tview.Primitive
+	helpModal    tview.Primitive
+	analyzeModal tview.Primitive
 
 	player *Player
 
@@ -47,12 +48,15 @@ func newSelector(player *Player) *Selector {
 	keyBindingHelp := [][]string{
 		{"Key", "Description"},
 		{"Esc", "Quit"},
-		{"l", "LoadMusic"},
+		{"d", "SelectMusic"},
 		{"j", "Down Cursor"},
 		{"k", "Up Cursor"},
 		{"a", "Analyze All Music"},
+		{"l", "Move Selected Dir"},
+		{"h", "Move Parent Dir"},
 	}
 	s.helpModal = newHelpModal(keyBindingHelp)
+	s.analyzeModal = newMsgModal(30, 5, "hogehogehogehoge")
 
 	s.musicListView.SetBorder(true).SetTitleAlign(tview.AlignLeft).SetTitle("MusicList")
 	s.SetDirection(tview.FlexRow).
@@ -66,6 +70,8 @@ func newSelector(player *Player) *Selector {
 }
 
 func (s *Selector) update() {
+	s.musicListView.Clear()
+	// music list udpate
 	for i, musicInfo := range s.player.musics.List {
 		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
@@ -73,6 +79,12 @@ func (s *Selector) update() {
 		s.musicListView.SetCell(i+1, 3, tview.NewTableCell(musicInfo.Title).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 4, tview.NewTableCell(musicInfo.Duration).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 5, tview.NewTableCell(musicInfo.BPM).SetMaxWidth(1).SetExpansion(1))
+	}
+
+	// dir list update
+	for i, dirPath := range s.player.musics.ListDirs() {
+		s.musicListView.SetCell(i+1+len(s.player.musics.List), 0, tview.NewTableCell("Dir").SetMaxWidth(1).SetExpansion(1).SetTextColor(tcell.ColorBlue))
+		s.musicListView.SetCell(i+1+len(s.player.musics.List), 3, tview.NewTableCell(dirPath).SetMaxWidth(1).SetExpansion(1).SetTextColor(tcell.ColorBlue))
 	}
 }
 
@@ -86,11 +98,26 @@ func (s *Selector) SetKeyHandler() {
 					s.player.analyzer.AnalyzeMusic(m)
 				}
 			}
+			s.player.musics.ListMusics()
 			s.update()
-		case 'l':
-			// load music
+		case 'd':
+			// select music
 			row, _ := s.musicListView.GetSelection()
-			s.player.LoadMusic(s.player.musics.List[row-1])
+			if row <= len(s.player.musics.List) {
+				s.player.LoadMusic(s.player.musics.List[row-1])
+			}
+		case 'h':
+			// move parent dir
+			s.player.musics.MoveParentDir()
+			s.update()
+			s.musicListView.Select(1, 1)
+		case 'l':
+			row, _ := s.musicListView.GetSelection()
+			if row > len(s.player.musics.List) {
+				s.player.musics.MoveChildDir(s.musicListView.GetCell(row, 3).Text)
+			}
+			s.update()
+			s.musicListView.Select(1, 1)
 		}
 		return e
 	})
