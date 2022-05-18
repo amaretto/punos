@@ -97,8 +97,10 @@ func (s *Selector) SetKeyHandler() {
 				if m.Status == "Not Analyzed" {
 					s.player.analyzer.AnalyzeMusic(m)
 				}
+				// ToDo:this doesn't work........
+				s.update()
 			}
-			s.player.musics.ListMusics()
+			//s.player.musics.ListMusics()
 			s.update()
 		case 'd':
 			// select music
