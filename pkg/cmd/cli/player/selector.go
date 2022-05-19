@@ -1,6 +1,8 @@
 package player
 
 import (
+	"sync"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -8,6 +10,7 @@ import (
 // Selector is panel for selecting music
 type Selector struct {
 	*tview.Flex
+	mu           sync.Mutex
 	helpModal    tview.Primitive
 	analyzeModal tview.Primitive
 
@@ -73,7 +76,16 @@ func (s *Selector) update() {
 	s.musicListView.Clear()
 	// music list udpate
 	for i, musicInfo := range s.player.musics.List {
-		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1))
+		var color tcell.Color
+		if musicInfo.Status == "Not Analyzed" {
+			color = tcell.ColorRed
+		} else if musicInfo.Status == "Analyzing..." {
+			color = tcell.ColorYellow
+		} else {
+			color = tcell.ColorGreen
+		}
+
+		s.musicListView.SetCell(i+1, 0, tview.NewTableCell(musicInfo.Status).SetMaxWidth(1).SetExpansion(1).SetTextColor(color))
 		s.musicListView.SetCell(i+1, 1, tview.NewTableCell(musicInfo.Album).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 2, tview.NewTableCell(musicInfo.Authors).SetMaxWidth(1).SetExpansion(1))
 		s.musicListView.SetCell(i+1, 3, tview.NewTableCell(musicInfo.Title).SetMaxWidth(1).SetExpansion(1))
@@ -95,13 +107,22 @@ func (s *Selector) SetKeyHandler() {
 		case 'a':
 			for _, m := range s.player.musics.List {
 				if m.Status == "Not Analyzed" {
-					s.player.analyzer.AnalyzeMusic(m)
+					// copy for parallel execution
+					musicInfo := m
+					go func() {
+						musicInfo.Status = "Analyzing..."
+						s.mu.Lock()
+						s.update()
+						s.mu.Unlock()
+
+						s.player.analyzer.AnalyzeMusic(musicInfo)
+
+						s.mu.Lock()
+						s.update()
+						s.mu.Unlock()
+					}()
 				}
-				// ToDo:this doesn't work........
-				s.update()
 			}
-			//s.player.musics.ListMusics()
-			s.update()
 		case 'd':
 			// select music
 			row, _ := s.musicListView.GetSelection()
