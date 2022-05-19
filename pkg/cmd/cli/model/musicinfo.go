@@ -76,7 +76,7 @@ func (m *Musics) ListMusics() {
 			report(err)
 		}
 		if contains(mi.Path, musicPathList) {
-			mi.Status = "✔"
+			mi.Status = "Ready"
 			m.List = append(m.List, mi)
 			musicPathList = del(mi.Path, musicPathList)
 		}
