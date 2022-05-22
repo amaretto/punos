@@ -78,6 +78,7 @@ func (t *Turntable) update() {
 	t.waveformPanel.update(t.app.nowPlaying.Waveform, t.app.streamer.Position())
 	t.meterBox.update(int((t.app.volume.Volume+1)*100), int(t.app.resampler.Ratio()*100))
 	// ToDo: update PlayPause
+	t.playPauseBox.update(!t.app.ctrl.Paused)
 }
 
 func (t *Turntable) SetKeyHandler() {
