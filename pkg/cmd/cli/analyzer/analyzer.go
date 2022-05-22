@@ -26,7 +26,7 @@ type Analyzer struct {
 func NewAnalyzer(conf *config.Config, sampleRate beep.SampleRate) *Analyzer {
 	a := &Analyzer{
 		sampleRate: sampleRate,
-		wvfmr:      waveform.NewWaveformer(),
+		wvfmr:      waveform.NewWaveformer(20, 800, 3),
 		musics:     model.NewMusics(conf),
 	}
 	return a
