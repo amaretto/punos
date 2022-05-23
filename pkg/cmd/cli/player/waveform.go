@@ -75,9 +75,31 @@ func wave2str(wave []byte, limit int) []string {
 		for j, num := range wave {
 			if j == len(wave)/2-1 {
 				str = str + "|"
-			} else if int(num) >= i || fill[num] {
-				str = str + "#"
-				fill[num] = true
+			} else if int(num/8) == i-1 {
+				var c string
+				switch num % 8 {
+				case 0:
+					c = " "
+				case 1:
+					c = "▁"
+				case 2:
+					c = "▂"
+				case 3:
+					c = "▃"
+				case 4:
+					c = "▄"
+				case 5:
+					c = "▅"
+				case 6:
+					c = "▆"
+				case 7:
+					c = "▇"
+				}
+				str = str + c
+				fill[j] = true
+			} else if int(num/8) == i || fill[j] {
+				str = str + "█"
+				fill[j] = true
 			} else {
 				str = str + " "
 			}
