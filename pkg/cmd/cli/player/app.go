@@ -67,6 +67,8 @@ func New() *Player {
 		report(err)
 	}
 
+	p.playerID = p.config.DJName
+
 	p.turntable = newTurntable(p)
 	p.pages.AddPage("turntable", p.turntable, true, true)
 

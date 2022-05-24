@@ -14,6 +14,7 @@ import (
 type Config struct {
 	MusicPath string `yaml:"musicPath"`
 	DBPath    string `yaml:"dbPath"`
+	DJName    string `yaml:"djName"`
 }
 
 func LoadConfig(confPath string) (*Config, error) {
@@ -93,7 +94,9 @@ func CreateDefaultFile(confPath string) error {
 	defer fp.Close()
 
 	// create template if need
-	raw := `dbPath: ~/.punos/punos.db`
+	raw := `dbPath: ~/.punos/punos.db
+djName: NoName
+`
 
 	fp.WriteString(raw)
 	return nil
