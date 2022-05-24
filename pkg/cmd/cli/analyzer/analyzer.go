@@ -37,7 +37,6 @@ func (a *Analyzer) AnalyzeMusic(musicInfo *model.MusicInfo) {
 	a.wvfmr.MusicPath = musicInfo.Path
 	wvfm, err := a.wvfmr.GenWaveForm()
 
-	// ToDo: avoid os.Exit when analyzer failed
 	if err != nil {
 		logrus.Debug(err)
 		report(err)
@@ -50,7 +49,6 @@ func (a *Analyzer) AnalyzeMusic(musicInfo *model.MusicInfo) {
 		report(err)
 	}
 
-	// set sqlite
 	logrus.Debug("start create and register waveform:", musicInfo.Path)
 	a.musics.RegisterMusicInfo(musicInfo)
 	a.musics.RegisterWaveform(wvfm)

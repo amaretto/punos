@@ -22,13 +22,13 @@ const pauseString = `
 const playingString = `
 
 
-       _             _                 
- _ __ | | __ _ _   _(_)_ __   __ _     
-| '_ \| |/ _' | | | | | '_ \ / _' |    
-| |_) | | (_| | |_| | | | | | (_| |    
-| .__/|_|\__,_|\__, |_|_| |_|\__, |    
-|_|            |___/         |___/     
 
+                             _             _                    
+ _ __   _____      __  _ __ | | __ _ _   _(_)_ __   __ _        
+| '_ \ / _ \ \ /\ / / | '_ \| |/ _' | | | | | '_ \ / _' |       
+| | | | (_) \ V  V /  | |_) | | (_| | |_| | | | | | (_| |       
+|_| |_|\___/ \_/\_/   | .__/|_|\__,_|\__, |_|_| |_|\__, |       
+                      |_|            |___/         |___/        
 `
 
 type PlayPausePanel struct {
@@ -51,11 +51,13 @@ func (p *PlayPausePanel) setPause() {
 }
 
 func (p *PlayPausePanel) setPlaying() {
-	p.SetText(shiftLogo(playingString))
+	_, _, width, _ := p.GetRect()
+	p.SetText(shiftAndFitLogo(playingString, width-2))
 	p.SetTextColor(tcell.ColorGreen)
 }
 
-func shiftLogo(logo string) string {
+//ToDo: Fit height
+func shiftAndFitLogo(logo string, width int) string {
 	logoStrings := strings.Split(logo, "\n")
 	var maxLen int
 	for _, s := range logoStrings {
@@ -63,7 +65,7 @@ func shiftLogo(logo string) string {
 			maxLen = len(s)
 		}
 	}
-	shiftNum := (time.Now().Unix() * 4) % int64(maxLen)
+	shiftNum := (time.Now().Unix() * 10) % int64(maxLen)
 	for i := 0; i < len(logoStrings); i++ {
 		logoString := []byte(logoStrings[i])
 		if len(logoString) == 0 {
@@ -71,6 +73,10 @@ func shiftLogo(logo string) string {
 		}
 		// shift every 1sec
 		logoString = append(logoString[shiftNum:], logoString[:shiftNum]...)
+		// fit
+		if len(logoString) > width {
+			logoString = logoString[:width]
+		}
 		logoStrings[i] = string(logoString)
 	}
 	return strings.Join(logoStrings, "\n")
