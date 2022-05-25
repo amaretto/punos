@@ -35,7 +35,7 @@ func (mb *MeterBox) update(volume, speed int) {
 func NewMeterBox() *MeterBox {
 	mb := &MeterBox{
 		Flex:   tview.NewFlex(),
-		meters: []*Meter{&Meter{tview.NewTextView(), "volume"}, &Meter{tview.NewTextView(), "speed"}, &Meter{tview.NewTextView(), "pitch(N/A)"}, &Meter{tview.NewTextView(), "filter(N/A)"}},
+		meters: []*Meter{&Meter{tview.NewTextView(), "volume"}, &Meter{tview.NewTextView(), "speed"}, &Meter{tview.NewTextView(), "N/A"}, &Meter{tview.NewTextView(), "N/A"}},
 	}
 
 	mb.SetDirection(tview.FlexColumn).SetBorder(true).SetTitle("Meters").SetTitleAlign(tview.AlignLeft).SetBorderPadding(2, 2, 2, 2)
@@ -54,7 +54,7 @@ func (m *Meter) genMeter(val, max, height, width int, label string) string {
 	border := (height - 3) * val / max
 	if height > 6 && width > 9 {
 		meterStr = "┌" + strings.Repeat("─", width-2) + "┐\n"
-		guage = "│" + strings.Repeat("─", width-2) + "│\n"
+		guage = "│" + strings.Repeat("█", width-2) + "│\n"
 		empty = "│" + strings.Repeat(" ", width-2) + "│\n"
 		for i := height - 3; i > 0; i-- {
 			if i > border {
