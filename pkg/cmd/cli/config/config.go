@@ -36,7 +36,7 @@ func LoadConfig(confPath string) (*Config, error) {
 		}
 	}
 	if os.IsNotExist(fileErr) {
-		CreateDefaultFile(confPath)
+		createDefaultFile(confPath)
 	}
 
 	// load conf
@@ -59,7 +59,7 @@ func LoadConfig(confPath string) (*Config, error) {
 		}
 
 		fmt.Printf("Thank you for playing with punos!\n\n")
-		fmt.Printf("It seems you set music directory for punos yet. \nIs it ok to set the below current dir[%s] as music path?[y/N]:\n", color.GreenString(cd))
+		fmt.Printf("It seems you haven't set music directory for punos yet. \nIs it ok to set the below current dir[%s] as music path?[y/N]:\n", color.GreenString(cd))
 
 		var choise string
 		fmt.Scanf("%s", &choise)
@@ -86,7 +86,7 @@ func LoadConfig(confPath string) (*Config, error) {
 	return &conf, nil
 }
 
-func CreateDefaultFile(confPath string) error {
+func createDefaultFile(confPath string) error {
 	fp, err := os.Create(confPath + "/conf.yaml")
 	if err != nil {
 		return err
