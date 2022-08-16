@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+service Ctrl {
+  // Register TurnTable
+  rpc RegistTT (TTRegistRequest) returns (TTRegistResult) {}
+  // Get controll of TurnTable
+  rpc GetTTCmd (GetTTCmdRequest) returns (stream TTCmd) {}
+  // Register Controller
+  rpc RegistCtrl (CtrlRegistRequest) returns (CtrlRegistResult) {}
+  // Command
+  rpc SendTTCmd (stream TTCmdRequest) returns (TTCmdResult) {}
+}
+
+message TTRegistRequest {
+  string id = 1;
+}
+
+message TTRegistResult {
+  bool result = 1;
+}
+
+message GetTTCmdRequest {
+  string id = 1;
+}
+
+message TTCmd {
+  string cmd = 1;
+  string param = 2;
+}
+
+message CtrlRegistRequest {
+  string id = 1;
+}
+
+message CtrlRegistResult {
+  bool result = 1;
+}
+
+message TTCmdRequest   {
+  string cmd = 1;
+  string param = 2;
+}
+
+message TTCmdResult   {
+  bool result = 1;
+}
