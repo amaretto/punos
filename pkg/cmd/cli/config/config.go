@@ -19,7 +19,7 @@ type Config struct {
 
 func LoadConfig(confPath string) (*Config, error) {
 	conf := Config{}
-	// rename current dir
+	// convert ~ to absolute path
 	usr, _ := user.Current()
 	if strings.HasPrefix(confPath, "~") {
 		confPath = strings.Replace(confPath, "~", usr.HomeDir, 1)
