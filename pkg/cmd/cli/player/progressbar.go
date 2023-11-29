@@ -28,10 +28,8 @@ func genProgressBar(width, position, length int) string {
 	for i := 0; i < width; i++ {
 		if i > int(current) {
 			str = str + "-"
-		} else if i == int(current) {
-			str = str + ">"
 		} else {
-			str = str + "="
+			str = str + "▇"
 		}
 	}
 	str = str + "]"
